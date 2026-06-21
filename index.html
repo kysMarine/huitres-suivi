@@ -333,6 +333,7 @@
             <option value="desc">Plus récente d'abord</option>
           </select>
           <button class="btn-action primary" onclick="sortAllByDate()" style="font-size:.82rem">📅 Trier par date</button>
+          <button class="btn-action" onclick="sortAllByLot()" style="font-size:.82rem">🔤 Trier par lot (A→Z)</button>
         </div>
         <div id="sheets-result" style="margin-top:10px"></div>
       </div>
@@ -1032,6 +1033,101 @@ window.searchLotInSheets = async ()=>{
   }
 };
 
+async function fetchAndMergeItems(sheetId){
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/A1:ZZ500?key=${SHEETS_API_KEY}`;
+  const resp = await fetch(url);
+  if(!resp.ok) throw new Error('API error '+resp.status);
+  const data = await resp.json();
+  const rows = data.values||[];
+
+  const items = [];
+  const dateRegex = /(\d{2})\/(\d{2})\/(\d{2,4})/;
+
+  rows.forEach((row, rowIdx)=>{
+    row.forEach((cell)=>{
+      if(!cell || typeof cell !== 'string') return;
+      const dateMatch = cell.match(dateRegex);
+      if(!dateMatch) return;
+      let totalPoches = 0;
+      const pochesMatches = cell.matchAll(/(\d+)\s*p\b/gi);
+      for(const m of pochesMatches){ totalPoches += parseInt(m[1]); }
+      if(totalPoches === 0) return;
+
+      let [, dd, mm, yyyy] = dateMatch;
+      if(yyyy.length===2) yyyy = '20'+yyyy;
+      const dateObj = new Date(parseInt(yyyy), parseInt(mm)-1, parseInt(dd));
+
+      const gramMatch = cell.match(/\b(\d+)\s*g\b/i);
+      const calibreMatch = !gramMatch ? cell.match(/\b(K[1-5](?:[/-]K[1-5])?|En[1-4])\b/i) : null;
+      const poidsMatch = cell.match(/(\d+[,.]\d+|\d+)\s*kg/i);
+      let lotMatch = cell.match(/\b(\d{1,3}[A-Z]\d{2}[A-Z]{0,2})\b/i);
+      let lotName = lotMatch ? lotMatch[1] : null;
+      if(!lotName){
+        const wordsMatch = cell.match(/\b[A-Za-zÀ-ÿ]{3,}\b/g) || [];
+        const stopWords = ['kg','kgp','piquet','attention','acces','tracteur','ne','pas','sortir','par','le','haut','des','files'];
+        const candidate = wordsMatch.find(w => !stopWords.includes(w.toLowerCase()));
+        lotName = candidate || '—';
+      }
+
+      items.push({
+        date: dateObj,
+        dateStr: dd+'/'+mm+'/'+yyyy,
+        poches: totalPoches,
+        grammage: gramMatch ? gramMatch[1]+'g' : (calibreMatch ? calibreMatch[1] : '—'),
+        poids: poidsMatch ? parseFloat(poidsMatch[1].replace(',','.')) : null,
+        lot: lotName,
+        rangee: rowIdx+1,
+        raw: cell
+      });
+    });
+  });
+
+  if(!items.length) return [];
+
+  const groupedItems = {};
+  items.forEach(it=>{
+    const key = it.dateStr+'|'+it.lot+'|'+it.grammage+'|'+(it.poids||'');
+    if(!groupedItems[key]){
+      groupedItems[key] = {...it, poches:0};
+    }
+    groupedItems[key].poches += it.poches;
+  });
+  return Object.values(groupedItems);
+}
+
+function renderSheetsTable(mergedItems, lieu, subtitle){
+  const el = document.getElementById('sheets-result');
+  if(!mergedItems.length){
+    el.innerHTML = '<div style="color:var(--text2);font-size:.8rem;padding:6px 0">Aucune donnée trouvée.</div>';
+    return;
+  }
+  const rows_html = mergedItems.map(it=>`
+    <tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:7px 10px;font-weight:500">${it.dateStr}</td>
+      <td style="padding:7px 10px;font-family:monospace">${it.lot}</td>
+      <td style="padding:7px 10px;font-weight:600">${it.poches}p</td>
+      <td style="padding:7px 10px">${it.grammage}</td>
+      <td style="padding:7px 10px">${it.poids?it.poids+' kg':'—'}</td>
+    </tr>`).join('');
+
+  el.innerHTML = `
+    <div style="font-size:.82rem;font-weight:500;margin-bottom:8px">Tous les lots — ${lieu} (${mergedItems.length} entrée${mergedItems.length>1?'s':''}, ${subtitle})</div>
+    <div style="overflow-x:auto;border-radius:8px;border:1px solid var(--border);max-height:500px;overflow-y:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:.8rem">
+        <thead>
+          <tr style="background:var(--bg);position:sticky;top:0">
+            <th style="padding:7px 10px;text-align:left;font-weight:500;border-bottom:1px solid var(--border)">Date</th>
+            <th style="padding:7px 10px;text-align:left;font-weight:500;border-bottom:1px solid var(--border)">Lot</th>
+            <th style="padding:7px 10px;text-align:left;font-weight:500;border-bottom:1px solid var(--border)">Poches</th>
+            <th style="padding:7px 10px;text-align:left;font-weight:500;border-bottom:1px solid var(--border)">Grammage</th>
+            <th style="padding:7px 10px;text-align:left;font-weight:500;border-bottom:1px solid var(--border)">Poids/p</th>
+          </tr>
+        </thead>
+        <tbody>${rows_html}</tbody>
+      </table>
+    </div>`;
+}
+
 window.sortAllByDate = async ()=>{
   const planUrl = document.getElementById('plan-select').value;
   const lieu = URL_TO_LIEU[planUrl]||'';
@@ -1043,102 +1139,27 @@ window.sortAllByDate = async ()=>{
   el.innerHTML = '<div style="color:var(--text2);font-size:.8rem;padding:6px 0">🔄 Chargement et tri en cours...</div>';
 
   try{
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/A1:ZZ500?key=${SHEETS_API_KEY}`;
-    const resp = await fetch(url);
-    if(!resp.ok) throw new Error('API error '+resp.status);
-    const data = await resp.json();
-    const rows = data.values||[];
-
-    const items = [];
-    const dateRegex = /(\d{2})\/(\d{2})\/(\d{2,4})/;
-
-    rows.forEach((row, rowIdx)=>{
-      row.forEach((cell)=>{
-        if(!cell || typeof cell !== 'string') return;
-        const dateMatch = cell.match(dateRegex);
-        if(!dateMatch) return;
-        // Extraire poches (début de cellule)
-        let totalPoches = 0;
-        const pochesMatches = cell.matchAll(/(\d+)\s*p\b/gi);
-        for(const m of pochesMatches){ totalPoches += parseInt(m[1]); }
-        if(totalPoches === 0) return; // ignorer cellules sans poches (vides, légendes...)
-
-        let [, dd, mm, yyyy] = dateMatch;
-        if(yyyy.length===2) yyyy = '20'+yyyy;
-        const dateObj = new Date(parseInt(yyyy), parseInt(mm)-1, parseInt(dd));
-
-        // Grammage
-        const gramMatch = cell.match(/\b(\d+)\s*g\b/i);
-        const calibreMatch = !gramMatch ? cell.match(/\b(K[1-5](?:[/-]K[1-5])?|En[1-4])\b/i) : null;
-        // Poids
-        const poidsMatch = cell.match(/(\d+[,.]\d+|\d+)\s*kg/i);
-        // Numéro de lot : code numérique (02S25, 02M24R...) OU nom textuel (Danloss, Ricardo, St Lo...)
-        let lotMatch = cell.match(/\b(\d{1,3}[A-Z]\d{2}[A-Z]{0,2})\b/i);
-        let lotName = lotMatch ? lotMatch[1] : null;
-        if(!lotName){
-          // Chercher un mot textuel (lettres uniquement, 3+ caractères) qui n'est pas une unité connue
-          const wordsMatch = cell.match(/\b[A-Za-zÀ-ÿ]{3,}\b/g) || [];
-          const stopWords = ['kg','kgp','piquet','attention','acces','tracteur','ne','pas','sortir','par','le','haut','des','files'];
-          const candidate = wordsMatch.find(w => !stopWords.includes(w.toLowerCase()));
-          lotName = candidate || '—';
-        }
-
-        items.push({
-          date: dateObj,
-          dateStr: dd+'/'+mm+'/'+yyyy,
-          poches: totalPoches,
-          grammage: gramMatch ? gramMatch[1]+'g' : (calibreMatch ? calibreMatch[1] : '—'),
-          poids: poidsMatch ? parseFloat(poidsMatch[1].replace(',','.')) : null,
-          lot: lotName,
-          rangee: rowIdx+1,
-          raw: cell
-        });
-      });
-    });
-
-    if(!items.length){
-      el.innerHTML = '<div style="color:var(--text2);font-size:.8rem;padding:6px 0">Aucune cellule avec date trouvée.</div>';
-      return;
-    }
-
-    // Regrouper les lignes identiques (date + lot + grammage + poids) en additionnant les poches
-    const groupedItems = {};
-    items.forEach(it=>{
-      const key = it.dateStr+'|'+it.lot+'|'+it.grammage+'|'+(it.poids||'');
-      if(!groupedItems[key]){
-        groupedItems[key] = {...it, poches:0};
-      }
-      groupedItems[key].poches += it.poches;
-    });
-    const mergedItems = Object.values(groupedItems);
-
+    const mergedItems = await fetchAndMergeItems(sheetId);
     mergedItems.sort((a,b)=> order==='asc' ? a.date-b.date : b.date-a.date);
+    renderSheetsTable(mergedItems, lieu, order==='asc'?'plus ancienne d\'abord':'plus récente d\'abord');
+  }catch(e){
+    el.innerHTML = '<div style="color:var(--danger);font-size:.8rem;padding:6px 0">Erreur : '+e.message+'</div>';
+  }
+};
 
-    const rows_html = mergedItems.map(it=>`
-      <tr style="border-bottom:1px solid var(--border)">
-        <td style="padding:7px 10px;font-weight:500">${it.dateStr}</td>
-        <td style="padding:7px 10px;font-family:monospace">${it.lot}</td>
-        <td style="padding:7px 10px;font-weight:600">${it.poches}p</td>
-        <td style="padding:7px 10px">${it.grammage}</td>
-        <td style="padding:7px 10px">${it.poids?it.poids+' kg':'—'}</td>
-      </tr>`).join('');
+window.sortAllByLot = async ()=>{
+  const planUrl = document.getElementById('plan-select').value;
+  const lieu = URL_TO_LIEU[planUrl]||'';
+  const sheetId = SHEET_IDS[lieu];
+  if(!sheetId){alert('Aucune sheet configurée pour ce parc.');return;}
 
-    el.innerHTML = `
-      <div style="font-size:.82rem;font-weight:500;margin-bottom:8px">Tous les lots — ${lieu} (${mergedItems.length} entrée${mergedItems.length>1?'s':''}, ${order==='asc'?'plus ancienne':'plus récente'} d'abord)</div>
-      <div style="overflow-x:auto;border-radius:8px;border:1px solid var(--border);max-height:500px;overflow-y:auto">
-        <table style="width:100%;border-collapse:collapse;font-size:.8rem">
-          <thead>
-            <tr style="background:var(--bg);position:sticky;top:0">
-              <th style="padding:7px 10px;text-align:left;font-weight:500;border-bottom:1px solid var(--border)">Date</th>
-              <th style="padding:7px 10px;text-align:left;font-weight:500;border-bottom:1px solid var(--border)">Lot</th>
-              <th style="padding:7px 10px;text-align:left;font-weight:500;border-bottom:1px solid var(--border)">Poches</th>
-              <th style="padding:7px 10px;text-align:left;font-weight:500;border-bottom:1px solid var(--border)">Grammage</th>
-              <th style="padding:7px 10px;text-align:left;font-weight:500;border-bottom:1px solid var(--border)">Poids/p</th>
-            </tr>
-          </thead>
-          <tbody>${rows_html}</tbody>
-        </table>
-      </div>`;
+  const el = document.getElementById('sheets-result');
+  el.innerHTML = '<div style="color:var(--text2);font-size:.8rem;padding:6px 0">🔄 Chargement et tri en cours...</div>';
+
+  try{
+    const mergedItems = await fetchAndMergeItems(sheetId);
+    mergedItems.sort((a,b)=> a.lot.localeCompare(b.lot, 'fr', {sensitivity:'base'}));
+    renderSheetsTable(mergedItems, lieu, 'tri par lot A→Z');
   }catch(e){
     el.innerHTML = '<div style="color:var(--danger);font-size:.8rem;padding:6px 0">Erreur : '+e.message+'</div>';
   }
