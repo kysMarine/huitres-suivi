@@ -1060,8 +1060,13 @@ async function fetchAndMergeItems(sheetId){
       const gramMatch = cell.match(/\b(\d+)\s*g\b/i);
       const calibreMatch = !gramMatch ? cell.match(/\b(K[1-5](?:[/-]K[1-5])?|En[1-4])\b/i) : null;
       const poidsMatch = cell.match(/(\d+[,.]\d+|\d+)\s*kg/i);
-      let lotMatch = cell.match(/\b(\d{1,3}[A-Z]\d{2}[A-Z]{0,2})\b/i);
-      let lotName = lotMatch ? lotMatch[1] : null;
+      // Préfixes spéciaux avec suffixe (Issu F3, Issu F4, Dvrs STM, Dvrs M...)
+      let lotMatch = cell.match(/\b(issu|dvrs)\s+([A-Za-zÀ-ÿ0-9]+)\b/i);
+      let lotName = lotMatch ? (lotMatch[1].charAt(0).toUpperCase()+lotMatch[1].slice(1).toLowerCase()+' '+lotMatch[2].toUpperCase()) : null;
+      if(!lotName){
+        const codeMatch = cell.match(/\b(\d{1,3}[A-Z]\d{2}[A-Z]{0,2})\b/i);
+        lotName = codeMatch ? codeMatch[1] : null;
+      }
       if(!lotName){
         const wordsMatch = cell.match(/\b[A-Za-zÀ-ÿ]{3,}\b/g) || [];
         const stopWords = ['kg','kgp','piquet','attention','acces','tracteur','ne','pas','sortir','par','le','haut','des','files'];
