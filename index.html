@@ -1072,8 +1072,16 @@ window.sortAllByDate = async ()=>{
         const calibreMatch = !gramMatch ? cell.match(/\b(K[1-5](?:[/-]K[1-5])?|En[1-4])\b/i) : null;
         // Poids
         const poidsMatch = cell.match(/(\d+[,.]\d+|\d+)\s*kg/i);
-        // Numéro de lot approximatif : chercher un motif type 02S25, 02M24R, 10M24...
-        const lotMatch = cell.match(/\b(\d{1,3}[A-Z]\d{2}[A-Z]{0,2})\b/i);
+        // Numéro de lot : code numérique (02S25, 02M24R...) OU nom textuel (Danloss, Ricardo, St Lo...)
+        let lotMatch = cell.match(/\b(\d{1,3}[A-Z]\d{2}[A-Z]{0,2})\b/i);
+        let lotName = lotMatch ? lotMatch[1] : null;
+        if(!lotName){
+          // Chercher un mot textuel (lettres uniquement, 3+ caractères) qui n'est pas une unité connue
+          const wordsMatch = cell.match(/\b[A-Za-zÀ-ÿ]{3,}\b/g) || [];
+          const stopWords = ['kg','kgp','piquet','attention','acces','tracteur','ne','pas','sortir','par','le','haut','des','files'];
+          const candidate = wordsMatch.find(w => !stopWords.includes(w.toLowerCase()));
+          lotName = candidate || '—';
+        }
 
         items.push({
           date: dateObj,
@@ -1081,7 +1089,7 @@ window.sortAllByDate = async ()=>{
           poches: totalPoches,
           grammage: gramMatch ? gramMatch[1]+'g' : (calibreMatch ? calibreMatch[1] : '—'),
           poids: poidsMatch ? parseFloat(poidsMatch[1].replace(',','.')) : null,
-          lot: lotMatch ? lotMatch[1] : '—',
+          lot: lotName,
           rangee: rowIdx+1,
           raw: cell
         });
@@ -1093,9 +1101,20 @@ window.sortAllByDate = async ()=>{
       return;
     }
 
-    items.sort((a,b)=> order==='asc' ? a.date-b.date : b.date-a.date);
+    // Regrouper les lignes identiques (date + lot + grammage + poids) en additionnant les poches
+    const groupedItems = {};
+    items.forEach(it=>{
+      const key = it.dateStr+'|'+it.lot+'|'+it.grammage+'|'+(it.poids||'');
+      if(!groupedItems[key]){
+        groupedItems[key] = {...it, poches:0};
+      }
+      groupedItems[key].poches += it.poches;
+    });
+    const mergedItems = Object.values(groupedItems);
 
-    const rows_html = items.map(it=>`
+    mergedItems.sort((a,b)=> order==='asc' ? a.date-b.date : b.date-a.date);
+
+    const rows_html = mergedItems.map(it=>`
       <tr style="border-bottom:1px solid var(--border)">
         <td style="padding:7px 10px;font-weight:500">${it.dateStr}</td>
         <td style="padding:7px 10px;font-family:monospace">${it.lot}</td>
@@ -1105,7 +1124,7 @@ window.sortAllByDate = async ()=>{
       </tr>`).join('');
 
     el.innerHTML = `
-      <div style="font-size:.82rem;font-weight:500;margin-bottom:8px">Tous les lots — ${lieu} (${items.length} entrée${items.length>1?'s':''}, ${order==='asc'?'plus ancienne':'plus récente'} d'abord)</div>
+      <div style="font-size:.82rem;font-weight:500;margin-bottom:8px">Tous les lots — ${lieu} (${mergedItems.length} entrée${mergedItems.length>1?'s':''}, ${order==='asc'?'plus ancienne':'plus récente'} d'abord)</div>
       <div style="overflow-x:auto;border-radius:8px;border:1px solid var(--border);max-height:500px;overflow-y:auto">
         <table style="width:100%;border-collapse:collapse;font-size:.8rem">
           <thead>
