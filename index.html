@@ -272,7 +272,7 @@
         <div class="card-title">Créer un nouveau lot</div>
         <div class="form-row">
           <div class="field-inline"><label>Numéro de lot *</label><input type="text" id="n-num" placeholder="ex: 155 26"></div>
-          <div class="field-inline"><label>Année</label><input type="number" id="n-annee" value="2025"></div>
+          <div class="field-inline"><label>Date d'entrée</label><input type="date" id="n-date"></div>
         </div>
         <div class="form-row">
           <div class="field-inline"><label>Origine</label><input type="text" id="n-origine" placeholder="ex: Bretagne Nord"></div>
@@ -284,8 +284,13 @@
           </div>
         </div>
         <div class="form-row">
-          <div class="field-inline"><label>Quantité (douzaines)</label><input type="number" id="n-qte" placeholder="ex: 500"></div>
-          <div class="field-inline"><label>Date d'entrée</label><input type="date" id="n-date"></div>
+          <div class="field-inline"><label>Quantité</label><input type="number" id="n-qte" placeholder="ex: 500"></div>
+          <div class="field-inline"><label>Unité</label>
+            <select id="n-unite">
+              <option value="Kg">Kg</option>
+              <option value="Nombres">Nombres</option>
+            </select>
+          </div>
         </div>
         <div class="field-inline"><label>Notes</label><textarea id="n-notes" rows="2" placeholder="Observations…"></textarea></div>
         <button class="btn-action primary btn-full" onclick="creerLot()">Créer le lot</button>
@@ -570,13 +575,15 @@ function loadLots(){
 window.creerLot = async ()=>{
   const num = document.getElementById('n-num').value.trim();
   if(!num){alert('Numéro de lot requis.');return;}
+  const dateEntree = document.getElementById('n-date').value||todayStr();
   const lot = {
     numero: num,
-    annee: parseInt(document.getElementById('n-annee').value)||new Date().getFullYear(),
+    annee: new Date(dateEntree).getFullYear(),
     origine: document.getElementById('n-origine').value.trim(),
     lieuActuel: document.getElementById('n-lieu').value,
-    quantite: parseInt(document.getElementById('n-qte').value)||null,
-    dateEntree: document.getElementById('n-date').value||todayStr(),
+    quantite: parseFloat(document.getElementById('n-qte').value)||null,
+    unite: document.getElementById('n-unite').value,
+    dateEntree: dateEntree,
     notes: document.getElementById('n-notes').value.trim(),
     createdAt: Date.now(),
     historique: {}
@@ -794,11 +801,14 @@ window.openEditLot = (id)=>{
       <input type="text" id="edit-num" value="${lot.numero}">
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      <div class="field-inline"><label>Année</label>
-        <input type="number" id="edit-annee" value="${lot.annee}">
-      </div>
-      <div class="field-inline"><label>Quantité (dz)</label>
+      <div class="field-inline"><label>Quantité</label>
         <input type="number" id="edit-qte" value="${lot.quantite||''}">
+      </div>
+      <div class="field-inline"><label>Unité</label>
+        <select id="edit-unite">
+          <option value="Kg" ${(lot.unite||'Kg')==='Kg'?'selected':''}>Kg</option>
+          <option value="Nombres" ${lot.unite==='Nombres'?'selected':''}>Nombres</option>
+        </select>
       </div>
     </div>
     <div class="field-inline"><label>Origine</label>
@@ -825,14 +835,15 @@ window.openEditLot = (id)=>{
 
 window.saveEditLot = async (id)=>{
   const num    = document.getElementById('edit-num').value.trim();
-  const annee  = parseInt(document.getElementById('edit-annee').value)||new Date().getFullYear();
-  const qte    = parseInt(document.getElementById('edit-qte').value)||null;
+  const qte    = parseFloat(document.getElementById('edit-qte').value)||null;
+  const unite  = document.getElementById('edit-unite').value;
   const origine= document.getElementById('edit-origine').value.trim();
   const lieu   = document.getElementById('edit-lieu').value;
   const date   = document.getElementById('edit-date').value;
   const notes  = document.getElementById('edit-notes').value.trim();
   if(!num){alert('Numéro de lot requis.');return;}
-  await update(lotRef(id),{numero:num,annee,quantite:qte,origine,lieuActuel:lieu,dateEntree:date,notes});
+  const annee = date ? new Date(date).getFullYear() : (lots[id].annee||new Date().getFullYear());
+  await update(lotRef(id),{numero:num,annee,quantite:qte,unite,origine,lieuActuel:lieu,dateEntree:date,notes});
   closeModal('overlay-op');
   setTimeout(()=>openLot(id),300);
   alert('Lot mis à jour !');
@@ -1237,7 +1248,7 @@ function lotCardHTML(id, l, isChild=false){
     <div class="lot-header">
       <div>
         <div class="lot-num">🦪 <span style="font-family:monospace;font-size:${isChild?'.9':'1'}rem;font-weight:600">${code}</span></div>
-        <div class="lot-meta">${l.origine||'Origine inconnue'}${l.quantite?' · '+l.quantite+' dz':''}</div>
+        <div class="lot-meta">${l.origine||'Origine inconnue'}${l.quantite?' · '+l.quantite+' '+(l.unite||'Kg'):''}</div>
       </div>
       <div style="text-align:right">
         ${lieuBadge(l.lieuActuel)}
@@ -1329,7 +1340,7 @@ function renderLots(){
           <div class="lot-header">
             <div>
               <div class="lot-num">🦪 <span style="font-family:monospace;font-size:1rem;font-weight:600">${lotCode(l)}</span></div>
-              <div class="lot-meta">${l.origine||'Origine inconnue'}${l.quantite?' · '+l.quantite+' dz':''}</div>
+              <div class="lot-meta">${l.origine||'Origine inconnue'}${l.quantite?' · '+l.quantite+' '+(l.unite||'Kg'):''}</div>
             </div>
             <div style="display:flex;align-items:center;gap:8px">
               <div style="text-align:right">
@@ -1375,7 +1386,7 @@ window.openLot = (id)=>{
       <div><span style="color:var(--text2)">Origine</span><br><strong>${lot.origine||'—'}</strong></div>
       <div><span style="color:var(--text2)">Lieu actuel</span><br>${lieuBadge(lot.lieuActuel)}</div>
       <div><span style="color:var(--text2)">Année</span><br><strong>${lot.annee}</strong></div>
-      <div><span style="color:var(--text2)">Quantité</span><br><strong>${lot.quantite?lot.quantite+' dz':'—'}</strong></div>
+      <div><span style="color:var(--text2)">Quantité</span><br><strong>${lot.quantite?lot.quantite+' '+(lot.unite||'Kg'):'—'}</strong></div>
     </div>
     <div style="margin-bottom:1rem">
       <div style="font-size:.82rem;font-weight:500;margin-bottom:8px;color:var(--text2)">Ajouter une opération</div>
@@ -1416,8 +1427,8 @@ window.exportExcel = ()=>{
   const arr=Object.entries(lots);
   if(!arr.length){alert('Aucun lot à exporter.');return;}
   const wb=XLSX.utils.book_new();
-  const lotsData=[['Numéro','Année','Origine','Lieu actuel','Quantité (dz)','Date entrée','Nb opérations','Notes'],
-    ...arr.map(([id,l])=>[l.numero,l.annee,l.origine,l.lieuActuel,l.quantite||'',l.dateEntree,l.historique?Object.keys(l.historique).length:0,l.notes||''])];
+  const lotsData=[['Numéro','Année','Origine','Lieu actuel','Quantité','Unité','Date entrée','Nb opérations','Notes'],
+    ...arr.map(([id,l])=>[l.numero,l.annee,l.origine,l.lieuActuel,l.quantite||'',l.unite||'Kg',l.dateEntree,l.historique?Object.keys(l.historique).length:0,l.notes||''])];
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(lotsData),'Lots');
   const histo=[['Lot','Type','Date','Lieu','Détail'],
     ...arr.flatMap(([id,l])=>histoArr(l).map(h=>[l.numero,h.type,h.date,h.lieu||'',h.detail]))];
