@@ -1415,6 +1415,9 @@ function renderLots(){
     const myChildren = children.filter(([cid,cl])=>cl.numero.startsWith(l.numero+'-'));
     const hasChildren = myChildren.length > 0;
     const groupId = 'grp-'+id;
+    // Si fractionné, masquer le lieu du parent si les enfants sont dans des lieux différents
+    const childLieux = new Set(myChildren.map(([cid,cl])=>cl.lieuActuel));
+    const showParentLieu = !hasChildren || childLieux.size <= 1;
     let html = '';
     if(hasChildren){
       html += `<div class="lot-group" style="margin-bottom:10px">
@@ -1426,7 +1429,7 @@ function renderLots(){
             </div>
             <div style="display:flex;align-items:center;gap:8px">
               <div style="text-align:right">
-                ${lieuBadge(l.lieuActuel)}
+                ${showParentLieu ? lieuBadge(l.lieuActuel) : ''}
                 <div style="font-size:.7rem;color:var(--text2);margin-top:3px">${l.historique?Object.keys(l.historique).length:0} opération(s)</div>
               </div>
               <button onclick="event.stopPropagation();toggleGroup('${groupId}')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:2px 6px;cursor:pointer;font-size:.75rem;color:var(--text2)" id="btn-grp-${id}">
