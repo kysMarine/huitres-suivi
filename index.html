@@ -652,22 +652,45 @@ function calibrageHTML(){
   <div style="margin-top:8px">
     <div style="font-size:.85rem;font-weight:500;margin-bottom:8px">Calibrage — sélectionnez les catégories obtenues</div>
     ${Object.entries(CALIBRAGE_GROUPS).map(([groupName, cats])=>`
-      <div style="border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px;background:var(--bg)">
-        <div style="font-size:.8rem;font-weight:600;margin-bottom:6px">${groupName}</div>
-        ${cats.map(cat=>`
-        <div style="display:grid;grid-template-columns:auto 50px 1fr;align-items:center;gap:8px;margin-bottom:6px">
-          <input type="checkbox" id="cal-${cat}" onchange="toggleCalCat('${cat}')" style="width:15px;height:15px">
-          <label for="cal-${cat}" style="font-size:.85rem;font-weight:500">${cat}</label>
-          <input type="number" id="poids-${cat}" min="0" step="0.1" placeholder="kg" disabled style="padding:4px 6px;border:1px solid var(--border);border-radius:6px;font-size:.8rem;width:100%;background:var(--surface)">
-        </div>`).join('')}
+      <div style="border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden">
+        <button type="button" onclick="toggleCalGroup('${groupName}')" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:var(--bg);border:none;cursor:pointer;font-size:.85rem;font-weight:600;color:var(--text)">
+          <span id="calgroup-label-${groupName}">${groupName}</span>
+          <span id="calgroup-arrow-${groupName}" style="font-size:.7rem;color:var(--text2)">▼</span>
+        </button>
+        <div id="calgroup-body-${groupName}" style="display:none;padding:10px 12px">
+          ${cats.map(cat=>`
+          <div style="display:grid;grid-template-columns:auto 50px 1fr;align-items:center;gap:8px;margin-bottom:6px">
+            <input type="checkbox" id="cal-${cat}" onchange="toggleCalCat('${cat}')" style="width:15px;height:15px">
+            <label for="cal-${cat}" style="font-size:.85rem;font-weight:500">${cat}</label>
+            <input type="number" id="poids-${cat}" min="0" step="0.1" placeholder="kg" disabled style="padding:4px 6px;border:1px solid var(--border);border-radius:6px;font-size:.8rem;width:100%;background:var(--surface)">
+          </div>`).join('')}
+        </div>
       </div>`).join('')}
   </div>`;
 }
+
+window.toggleCalGroup = (groupName)=>{
+  const body = document.getElementById('calgroup-body-'+groupName);
+  const arrow = document.getElementById('calgroup-arrow-'+groupName);
+  if(!body) return;
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  arrow.textContent = isOpen ? '▼' : '▲';
+};
+
+window.updateCalGroupLabel = (groupName)=>{
+  const cats = CALIBRAGE_GROUPS[groupName];
+  const checked = cats.filter(c=>document.getElementById('cal-'+c)?.checked);
+  const label = document.getElementById('calgroup-label-'+groupName);
+  if(label) label.textContent = checked.length ? groupName+' ('+checked.length+')' : groupName;
+};
 
 window.toggleCalCat = (cat)=>{
   const cb = document.getElementById('cal-'+cat);
   const input = document.getElementById('poids-'+cat);
   if(input) input.disabled = !cb.checked;
+  const groupName = Object.entries(CALIBRAGE_GROUPS).find(([g,cats])=>cats.includes(cat))?.[0];
+  if(groupName) updateCalGroupLabel(groupName);
 };
 
 function getCalibrageDetail(){
@@ -1433,6 +1456,45 @@ window.toggleGroup = (groupId)=>{
   btn.textContent = isOpen ? '▼ '+count+' fraction(s)' : '▲ '+count+' fraction(s)';
 };
 
+window.toggleHistoDetail = (key)=>{
+  const el = document.getElementById(key);
+  const arrowId = key.replace('histo-','histo-arrow-');
+  const arrow = document.getElementById(arrowId);
+  if(!el) return;
+  const isOpen = el.style.display !== 'none';
+  el.style.display = isOpen ? 'none' : 'block';
+  if(arrow) arrow.textContent = isOpen ? '▶' : '▼';
+};
+
+function renderHistoDetail(h){
+  const detail = h.detail || '';
+  const bracketRegex = /\[([^:]+):\s*([^\]]+)\]/g;
+  const mainText = detail.replace(bracketRegex, '').trim();
+  const blocks = [];
+  let m;
+  while((m = bracketRegex.exec(detail)) !== null){
+    blocks.push({label: m[1].trim(), value: m[2].trim()});
+  }
+
+  let html = `<div style="margin-bottom:6px"><span style="color:var(--text2)">Type :</span> <strong>${mainText}</strong></div>`;
+  html += `<div style="margin-bottom:6px"><span style="color:var(--text2)">Date :</span> <strong>${h.date}</strong></div>`;
+  if(h.lieu) html += `<div style="margin-bottom:6px"><span style="color:var(--text2)">Lieu :</span> <strong>${h.lieu}</strong></div>`;
+
+  blocks.forEach(b=>{
+    const items = b.value.split(',').map(s=>s.trim()).filter(Boolean);
+    html += `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+      <div style="color:var(--text2);font-weight:500;margin-bottom:4px">${b.label} :</div>`;
+    if(items.length > 1){
+      html += `<ul style="margin:0;padding-left:18px">${items.map(it=>`<li>${it}</li>`).join('')}</ul>`;
+    } else {
+      html += `<div>${b.value}</div>`;
+    }
+    html += `</div>`;
+  });
+
+  return html;
+}
+
 window.openLot = (id)=>{
   currentLotId=id;
   const lot=lots[id];
@@ -1455,13 +1517,21 @@ window.openLot = (id)=>{
       <div style="font-size:.82rem;font-weight:500">Historique (${hist.length})</div>
     </div>
     <ul class="timeline">${hist.length?hist.map((h,i)=>`
-      <li class="tl-item">
-        <div class="tl-dot dot-${h.type}"></div><div class="tl-line"></div>
-        <div style="flex:1">
-          <div class="tl-title">${h.detail}</div>
-          <div class="tl-meta">${h.date}${h.lieu?' · '+h.lieu:''}</div>
+      <li class="tl-item" style="flex-direction:column;align-items:stretch">
+        <div style="display:flex;align-items:flex-start;gap:10px;cursor:pointer" onclick="toggleHistoDetail('histo-${id}-${i}')">
+          <div class="tl-dot dot-${h.type}" style="margin-top:5px"></div>
+          <div style="flex:1;min-width:0">
+            <div class="tl-title" style="display:flex;align-items:center;gap:6px">
+              <span id="histo-arrow-${id}-${i}" style="font-size:.65rem;color:var(--text2)">▶</span>
+              <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${h.detail}</span>
+            </div>
+            <div class="tl-meta">${h.date}${h.lieu?' · '+h.lieu:''}</div>
+          </div>
+          <button onclick="event.stopPropagation();deleteHistoEntry('${id}','${h._key}')" title="Supprimer cette entrée" style="background:none;border:none;cursor:pointer;color:var(--text2);font-size:.8rem;padding:2px 4px;border-radius:4px;flex-shrink:0" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text2)'">✕</button>
         </div>
-        <button onclick="deleteHistoEntry('${id}','${h._key}')" title="Supprimer cette entrée" style="background:none;border:none;cursor:pointer;color:var(--text2);font-size:.8rem;padding:2px 4px;border-radius:4px;flex-shrink:0" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text2)'">✕</button>
+        <div id="histo-${id}-${i}" style="display:none;margin-left:20px;margin-top:8px;padding:10px 12px;background:var(--bg);border-radius:8px;font-size:.8rem">
+          ${renderHistoDetail(h)}
+        </div>
       </li>`).join(''):'<div class="empty" style="padding:1rem">Aucune opération.</div>'}</ul>
     <div style="margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem;display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn-action" onclick="openEditLot('${id}')">✏️ Modifier le lot</button>
