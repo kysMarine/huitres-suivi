@@ -611,7 +611,7 @@ function vendableMultiHTML(){
     </label>
     <div id="vendable-options" style="display:none">
       <div style="font-size:.75rem;color:var(--text2);margin-bottom:6px">Cochez les calibres concernés et indiquez le poids :</div>
-      ${['K2','K3','F2','F3'].map(cal=>`
+      ${['K2','K3','F2','F3','Baby'].map(cal=>`
       <div style="display:grid;grid-template-columns:auto 60px 1fr;align-items:center;gap:8px;margin-bottom:6px">
         <input type="checkbox" id="cal-${cal}" style="width:15px;height:15px">
         <label for="cal-${cal}" style="font-size:.85rem;font-weight:500">${cal}</label>
@@ -630,7 +630,7 @@ window.toggleVendable = ()=>{
 function getVendableDetail(){
   const cb = document.getElementById('op-vendable');
   if(!cb||!cb.checked) return '';
-  const parts = ['K2','K3','F2','F3'].filter(cal=>{
+  const parts = ['K2','K3','F2','F3','Baby'].filter(cal=>{
     const c = document.getElementById('cal-'+cal);
     return c && c.checked;
   }).map(cal=>{
