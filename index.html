@@ -30,7 +30,8 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:.
 .header-right{display:flex;align-items:center;gap:.75rem}
 .user-badge{font-size:.8rem;color:var(--text2);background:var(--bg);padding:.3rem .7rem;border-radius:6px;border:1px solid var(--border)}
 .btn-sm{padding:.3rem .7rem;font-size:.8rem;border-radius:6px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text)}
-.main{flex:1;padding:1.5rem;max-width:100%;margin:0 auto;width:100%}
+.main{flex:1;padding:1.5rem;max-width:960px;margin:0 auto;width:100%}
+.main:has(#tab-plan.active){max-width:100%;padding:0}
 .tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:1.5rem;overflow-x:auto}
 .tab{padding:.5rem 1rem;font-size:.85rem;background:none;border:none;cursor:pointer;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
 .tab.active{color:var(--text);border-bottom-color:var(--primary);font-weight:500}
@@ -786,7 +787,11 @@ function toggleVide(){
   var isVide = document.getElementById('l-vide').checked;
   document.getElementById('lot-detail-fields').style.display = isVide ? 'none' : 'block';
   if(isVide){
-    // Couleur rouge automatique
+    // Vider les champs et mettre couleur rouge
+    document.getElementById('l-gram').value = '';
+    document.getElementById('l-lot').value = '';
+    document.getElementById('l-poids').value = '';
+    document.getElementById('l-notes').value = '';
     selColor = '#F87171';
     buildSw('lot-swatches','pickLotColor');
   }
@@ -1304,6 +1309,46 @@ function doPrint(){
 
 function todayStr(){var d=new Date();return d.toISOString().split('T')[0];}
 window.initPlanDesParcs=function(){if(window._planReady)return;window._planReady=true;load();renderTabs();render();setTimeout(initDrag,100);};
+
+// ── LIEN LOTS FIREBASE → PLAN ──
+window.findLotInPlan = function(numero, firstOnly){
+  if(!parcs||!numero) return null;
+  for(var pi=0;pi<parcs.length;pi++){
+    var parc=parcs[pi];
+    for(var zi=0;zi<parc.zones.length;zi++){
+      var zone=parc.zones[zi];
+      var found=[];
+      for(var bi=0;bi<zone.blocks.length;bi++){
+        var b=zone.blocks[bi];
+        if(b.type==='lot'&&b.lot&&b.lot.trim().toLowerCase()===numero.trim().toLowerCase())
+          found.push(bi);
+      }
+      if(found.length){
+        var r={parcIdx:pi,parcName:parc.name,zoneIdx:zi,zoneName:zone.name,blockIndices:found};
+        if(firstOnly) return r;
+      }
+    }
+  }
+  return null;
+};
+
+window.goToLotInPlan = function(numero){
+  var result=window.findLotInPlan(numero,true);
+  if(!result){alert('Lot "'+numero+'" introuvable dans le plan des parcs.');return;}
+  window.showTab('plan');
+  if(window.initPlanDesParcs) window.initPlanDesParcs();
+  activeParc=result.parcIdx;
+  parcs[activeParc].activeZone=result.zoneIdx;
+  highlighted=result.blockIndices;
+  syncInputs();renderTabs();render();
+  setTimeout(function(){
+    var b=parcs[activeParc].zones[result.zoneIdx].blocks[result.blockIndices[0]];
+    if(b){
+      var el=document.querySelector('td.blockcell.highlighted');
+      if(el) el.scrollIntoView({behavior:'smooth',block:'center',inline:'center'});
+    }
+  },200);
+};
 
 </script>
 
@@ -1882,11 +1927,16 @@ function lotCardHTML(id, l, isChild=false){
   const code = lotCode(l);
   const ops = l.historique ? Object.keys(l.historique).length : 0;
   const indent = isChild ? 'margin-left:1.5rem;border-left:3px solid var(--border);border-radius:0 8px 8px 0;' : '';
+  const inPlan = window.findLotInPlan ? window.findLotInPlan(l.numero, true) : null;
+  const planBtn = inPlan
+    ? `<button onclick="event.stopPropagation();goToLotInPlan('${l.numero}')" style="font-size:.72rem;padding:3px 8px;border-radius:6px;border:1px solid var(--primary);background:#e0f2fe;color:var(--primary);cursor:pointer;margin-top:4px;white-space:nowrap">🗺️ ${inPlan.parcName} › ${inPlan.zoneName}</button>`
+    : '';
   return `<div class="lot-card" onclick="openLot('${id}')" style="${indent}">
     <div class="lot-header">
       <div>
         <div class="lot-num">🦪 <span style="font-family:monospace;font-size:${isChild?'.9':'1'}rem;font-weight:600">${code}</span></div>
         <div class="lot-meta">${l.origine||'Origine inconnue'}${l.quantite?' · '+l.quantite+(l.unite?' '+l.unite:''):''}</div>
+        ${planBtn}
       </div>
       <div style="text-align:right">
         ${lieuBadge(l.lieuActuel)}
