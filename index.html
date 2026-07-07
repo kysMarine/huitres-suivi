@@ -900,8 +900,8 @@ td.blockcell.highlighted{outline:2px solid #e63946;outline-offset:-1px;z-index:2
 var SK = 'plan_parc_v4';
 var CELL = 20;
 
-// ── ONGLETS ──
-// ── STRUCTURE : parcs[{id, name, zones:[{id,name,ncols,nrows,ppp,blocks}], activeZone}] ──
+// -- ONGLETS --
+// -- STRUCTURE : parcs[{id, name, zones:[{id,name,ncols,nrows,ppp,blocks}], activeZone}] --
 var parcs = [];
 var activeParc = 0;
 var nextId = 1;
@@ -925,7 +925,7 @@ var zoneSel = {r1:0,c1:0,r2:0,c2:0,active:false};
 var zoneSelDrag = false, zoneR0=0, zoneC0=0;
 var ctxTarget = null;
 
-// ── UTILS ──
+// -- UTILS --
 function today(){ var d=new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
 function pad(n){ return n<10?'0'+n:n; }
 function fmt(iso){ if(!iso)return ''; var p=iso.split('-'); return p[2]+'/'+p[1]+'/'+p[0].slice(2); }
@@ -934,7 +934,7 @@ function esc(s){ var d=document.createElement('div');d.textContent=s;return d.in
 function toast(m){ var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},1800); }
 function darken(hex){ var r=Math.max(0,parseInt(hex.slice(1,3),16)-80),g=Math.max(0,parseInt(hex.slice(3,5),16)-80),b=Math.max(0,parseInt(hex.slice(5,7),16)-80); return 'rgb('+r+','+g+','+b+')'; }
 
-// ── HISTORIQUE ──
+// -- HISTORIQUE --
 function snap(){ return JSON.stringify({parcs:parcs,activeParc:activeParc,nextId:nextId}); }
 function pushHist(){
   var s=snap();
@@ -954,7 +954,7 @@ function undo(){ if(histIdx<=0)return;histIdx--;applySnap(stateHist[histIdx]);up
 function redo(){ if(histIdx>=stateHist.length-1)return;histIdx++;applySnap(stateHist[histIdx]);updHistBtns();toast('Retabli'); }
 function updHistBtns(){ document.getElementById('undoBtn').disabled=histIdx<=0;document.getElementById('redoBtn').disabled=histIdx>=stateHist.length-1; }
 
-// ── PERSISTANCE ──
+// -- PERSISTANCE --
 function save(skip){ localStorage.setItem(SK,snap());if(!skip)pushHist(); }
 function load(){
   try{
@@ -974,7 +974,7 @@ function syncInputs(){
   document.getElementById('inp-ppp').value=t.ppp;
 }
 
-// ── SETTINGS ──
+// -- SETTINGS --
 function applySettings(){
   var t=curTab();
   t.ncols=Math.min(500,Math.max(10,parseInt(document.getElementById('inp-cols').value)||100));
@@ -983,7 +983,7 @@ function applySettings(){
   save();render();
 }
 
-// ── NAVIGATION DEUX NIVEAUX ──
+// -- NAVIGATION DEUX NIVEAUX --
 function renderNav(){
   // Parcs (barre sombre)
   var p=document.getElementById('navParcs');
@@ -1051,14 +1051,14 @@ function renameZone(i){
 }
 
 
-// ── INSERT / DELETE LIGNES & COLONNES ──
+// -- INSERT / DELETE LIGNES & COLONNES --
 function insertRow(idx, before){
   var t=curTab();
   var pos=before?idx:idx+1;
   t.nrows++;
   t.blocks.forEach(function(b){
     if(b.dir==='down'||b.dir==='up'){
-      // blocs verticaux: décaler si nécessaire
+      // blocs verticaux: dcaler si ncessaire
       if(b.row>=pos) b.row++;
       else if(b.dir==='down'&&b.row<pos&&b.row+bspan(b)>pos){/* span s'étend, on laisse */}
     } else {
@@ -1100,7 +1100,7 @@ function deleteCol(idx){
   save();render();toast('Colonne supprimée');
 }
 
-// ── MENU CONTEXTUEL ──
+// -- MENU CONTEXTUEL --
 function openCtxMenu(e, type, idx){
   e.preventDefault();
   ctxTarget={type:type,idx:idx};
@@ -1131,7 +1131,7 @@ document.addEventListener('click',function(e){
   if(!e.target.closest('#ctxMenu'))document.getElementById('ctxMenu').classList.remove('open');
 });
 
-// ── VIDE TOGGLE ──
+// -- VIDE TOGGLE --
 function toggleVide(){
   var isVide = document.getElementById('l-vide').checked;
   document.getElementById('lot-detail-fields').style.display = isVide ? 'none' : 'block';
@@ -1142,7 +1142,7 @@ function toggleVide(){
   }
 }
 
-// ── MODE SELECTION DE ZONE ──
+// -- MODE SELECTION DE ZONE --
 var selMode = false;
 var zoneSel = {r1:0,c1:0,r2:0,c2:0,active:false};
 var zoneSelDrag = false, zoneR0=0, zoneC0=0;
@@ -1175,7 +1175,7 @@ function renderZoneSel(){
   document.getElementById('pr-sel-field').style.display = 'block';
 }
 
-// ── DROPDOWNS ──
+// -- DROPDOWNS --
 function toggleDD(id){
   var menu=document.getElementById(id+'-menu');
   var isOpen=menu.classList.contains('open');
@@ -1189,7 +1189,7 @@ document.addEventListener('click',function(e){
   if(!e.target.closest('.dropdown'))closeDD();
 });
 
-// ── ZOOM ──
+// -- ZOOM --
 function doZoom(d){
   if(d===-99)scale=1; else scale=Math.max(0.2,Math.min(4,Math.round((scale+d)*10)/10));
   // On applique le zoom sur la table directement (pas sur gridInner)
@@ -1198,7 +1198,7 @@ function doZoom(d){
   document.getElementById('zoom-label').textContent=Math.round(scale*100)+'%';
 }
 
-// ── BLOCS ──
+// -- BLOCS --
 function bpx(b){ return b.type==='libre'? Math.max(CELL,(b.nbcases||1)*CELL) : Math.max(CELL,Math.round((b.poches||1)/curTab().ppp)); }
 function bspan(b){ return Math.max(1,Math.min(500,Math.ceil(bpx(b)/CELL))); }
 function bcells(b){
@@ -1225,7 +1225,7 @@ function blabel(b){
   return p.join(' ');
 }
 
-// ── RENDER ──
+// -- RENDER --
 function render(){
   var t=curTab();
   var _ncols=t.ncols, _nrows=t.nrows;
@@ -1276,7 +1276,7 @@ function render(){
   updHistBtns();
 }
 
-// ── INTERACTIONS ──
+// -- INTERACTIONS --
 function clickBlock(bi){ openEditBlock(bi); }
 
 function initDrag(){
@@ -1360,7 +1360,7 @@ function renderDrag(){
   dragSel.forEach(function(k){var el=document.getElementById('c'+k);if(el)el.classList.add('drag-sel');});
 }
 
-// ── SWATCHES ──
+// -- SWATCHES --
 function buildSw(id,onPick){
   document.getElementById(id).innerHTML=COLORS.map(function(c){
     return '<div class="swatch'+(c===selColor?' sel':'')+'" style="background:'+c+'" onclick="'+onPick+'(\''+c+'\')"></div>';
@@ -1369,7 +1369,7 @@ function buildSw(id,onPick){
 function pickLotColor(c){selColor=c;buildSw('lot-swatches','pickLotColor');}
 function pickLibreColor(c){selColor=c;buildSw('libre-swatches','pickLibreColor');}
 
-// ── DIR BUTTONS ──
+// -- DIR BUTTONS --
 function setDir(d){
   selDir=d;
   ['up','down','left','right'].forEach(function(x){
@@ -1378,7 +1378,7 @@ function setDir(d){
   });
 }
 
-// ── OPEN MODALS ──
+// -- OPEN MODALS --
 function openNewLot(r,c){
   editing={isNew:true,row:r,col:c};
   document.getElementById('lot-title').textContent='Nouveau lot';
@@ -1463,7 +1463,7 @@ function openEditBlock(bi){
 
 function closeModal(id){ document.getElementById(id).classList.remove('open'); editing=null; }
 
-// ── SAVE BLOCS ──
+// -- SAVE BLOCS --
 function saveLot(){
   if(!editing)return;
   var isVide=document.getElementById('l-vide').checked;
@@ -1511,7 +1511,7 @@ function saveLibre(){
 function deleteLot(){ if(!editing||editing.isNew)return;curTab().blocks.splice(editing.bi,1);closeModal('modalLot');save();render();toast('Bloc supprimé'); }
 function deleteLibre(){ if(!editing||editing.isNew)return;curTab().blocks.splice(editing.bi,1);closeModal('modalLibre');save();render();toast('Zone supprimée'); }
 
-// ── RECHERCHE / CALCULS ──
+// -- RECHERCHE / CALCULS --
 function doSearch(){
   var val=document.getElementById('inp-search').value.trim();
   if(!val){clearSearch();return;}
@@ -1560,7 +1560,7 @@ function showRes(html){
   document.getElementById('results').classList.add('open');
 }
 
-// ── RESET / EXPORT / IMPORT ──
+// -- RESET / EXPORT / IMPORT --
 function resetAll(){
   if(!confirm('Tout effacer ?'))return;
   curTab().blocks=[];highlighted=[];save();render();toast('Plan effacé');
@@ -1589,7 +1589,7 @@ function importData(e){
   r.readAsText(f);e.target.value='';
 }
 
-// ── IMPRESSION ──
+// -- IMPRESSION --
 function openPrint(){
   var c1=1,c2=curTab().ncols,r1=1,r2=curTab().nrows;
   var hasZone=zoneSel.active;
@@ -1645,10 +1645,9 @@ function doPrint(){
   }
   tb+='</tbody>';
   var w=window.open('','_p','width=1200,height=900');
-  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+esc(title)+'</title><style>@page{size:'+fmt2+' '+ori+';margin:8mm}body{font-family:sans-serif;margin:0}h1{font-size:13px;margin:0 0 5px}table{border-collapse:collapse;table-layout:fixed;width:100%}td,th{padding:0;overflow:hidden;min-width:0;box-sizing:border-box}</style></head><body><h1>'+esc(title)+'</h1><table>'+th+tb+'</table><script>window.onload=function(){window.print();window.close();}<\/script>
-</div>
-
-<!-- MODAL LOT DETAIL -->
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+esc(title)+'</title><style>@page{size:'+fmt2+' '+ori+';margin:8mm}body{font-family:sans-serif;margin:0}h1{font-size:13px;margin:0 0 5px}table{border-collapse:collapse;table-layout:fixed;width:100%}td,th{padding:0;overflow:hidden;min-width:0;box-sizing:border-box}<\/style><\/head><body><h1>'+esc(title)+'</h1><table>'+th+tb+'</table><scr'+'ipt>window.onload=function(){window.print();window.close();<\/scr'+'ipt><\/body><\/html>');
+  w.document.close();
+}</script>
 <div class="overlay" id="overlay-lot">
   <div class="modal">
     <div class="modal-header">
@@ -1693,7 +1692,7 @@ import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, si
 import { getDatabase, ref, push, set, get, update, remove, onValue, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
 import * as XLSX from 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/+esm';
 
-// Détection config non remplie
+// Dtection config non remplie
 const configReady = FIREBASE_CONFIG.apiKey !== "VOTRE_API_KEY";
 if(!configReady){
   document.getElementById('firebase-setup-notice').style.display='block';
@@ -1706,13 +1705,13 @@ if(configReady){
   db = getDatabase(app);
 }
 
-// ─── ÉTAT ───
+// --- TAT ---
 let lots = {};
 let currentLotId = null;
 let cribSelected = '';
 window._lots = lots;
 
-// ─── AUTH ───
+// --- AUTH ---
 let currentUserData = null;
 
 window.showRegister = ()=>{
@@ -1799,7 +1798,7 @@ if(configReady){
   });
 }
 
-// ─── ADMIN USERS ───
+// --- ADMIN USERS ---
 function loadUsers(){
   onValue(ref(db,'users'), snap=>{
     renderAdminUsers(snap.val()||{});
@@ -1831,7 +1830,7 @@ function renderAdminUsers(users){
         <div style="display:flex;gap:6px;align-items:center">
           <span style="font-size:.75rem;padding:2px 8px;border-radius:4px;${u.role==='refused'?'background:#fcebeb;color:#a32d2d':'background:#eaf3de;color:#3b6d11'}">${u.role==='refused'?'Refusé':u.role==='admin'?'Admin':'Actif'}</span>
           ${u.role!=='admin'?`<button class="btn-action" style="font-size:.75rem;padding:4px 10px" onclick="toggleUser('${uid}','${u.role}')">${u.role==='refused'?'Réactiver':'Désactiver'}</button>`:''}
-          ${u.role!=='admin'?`<button class="btn-action" style="font-size:.75rem;padding:4px 10px;background:#e6f1fb;border-color:#185fa5;color:#0c447c" onclick="promoteAdmin('${uid}')">→ Admin</button>`:''}
+          ${u.role!=='admin'?`<button class="btn-action" style="font-size:.75rem;padding:4px 10px;background:#e6f1fb;border-color:#185fa5;color:#0c447c" onclick="promoteAdmin('${uid}')">-> Admin</button>`:''}
         </div>
       </div>`).join('') : '<div class="empty" style="padding:1rem">Aucun utilisateur.</div>';
   }
@@ -1842,7 +1841,7 @@ window.refuseUser   = async (uid)=>{ await update(ref(db,'users/'+uid),{role:'re
 window.toggleUser   = async (uid,role)=>{ await update(ref(db,'users/'+uid),{role:role==='refused'?'approved':'refused'}); };
 window.promoteAdmin = async (uid)=>{ if(!confirm('Promouvoir en administrateur ?'))return; await update(ref(db,'users/'+uid),{role:'admin'}); };
 
-// ─── DATA ───
+// --- DATA ---
 function lotsRef(){ return ref(db,'lots'); }
 function lotRef(id){ return ref(db,'lots/'+id); }
 
@@ -1881,9 +1880,9 @@ window.creerLot = async ()=>{
   alert('Lot '+num+' créé !');
 };
 
-// ─── OPERATIONS ───
+// --- OPERATIONS ---
 
-// ─── VENDABLE BLOCK (multi-calibre) ───
+// --- VENDABLE BLOCK (multi-calibre) ---
 function vendableMultiHTML(){
   return `
   <div class="field-inline" style="margin-top:10px;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--bg)">
@@ -1922,7 +1921,7 @@ function getVendableDetail(){
   return parts.length ? ' [Vendable: '+parts.join(', ')+']' : ' [Vendable]';
 }
 
-// ─── CALIBRAGE : Étoiles / Kys / Fines ───
+// --- CALIBRAGE : toiles / Kys / Fines ---
 const CALIBRAGE_GROUPS = {
   'Étoiles': ['En1','En2','En3','En4'],
   'Kys'    : ['K1','K2','K3','K4'],
@@ -1937,7 +1936,7 @@ function calibrageHTML(){
       <div style="border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden">
         <button type="button" onclick="toggleCalGroup('${groupName}')" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:var(--bg);border:none;cursor:pointer;font-size:.85rem;font-weight:600;color:var(--text)">
           <span id="calgroup-label-${groupName}">${groupName}</span>
-          <span id="calgroup-arrow-${groupName}" style="font-size:.7rem;color:var(--text2)">▼</span>
+          <span id="calgroup-arrow-${groupName}" style="font-size:.7rem;color:var(--text2)">v</span>
         </button>
         <div id="calgroup-body-${groupName}" style="display:none;padding:10px 12px">
           ${cats.map(cat=>`
@@ -2135,7 +2134,7 @@ window.saveOp = async (type)=>{
 
   // Vendable multi-calibre
   detail += getVendableDetail();
-  // Calibrage Étoiles/Kys/Fines
+  // Calibrage toiles/Kys/Fines
   detail += getCalibrageDetail();
 
   const typeKey = type.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z]/g,'');
@@ -2215,7 +2214,7 @@ window.saveEditLot = async (id)=>{
 
 
 
-// ─── CONSTANTES ───
+// --- CONSTANTES ---
 const LIEUX = ['R:antec','Carnac','Locmariaquer','Etel','St Belène','Blaver','Golf'];
 const LIEU_BADGE = {
   'R:antec':'b-blue','Carnac':'b-teal','Locmariaquer':'b-amber',
@@ -2465,7 +2464,7 @@ document.querySelectorAll('.overlay').forEach(o=>{
 
 // Enter key on login
 document.getElementById('login-password').addEventListener('keydown',e=>{if(e.key==='Enter')window.doLogin();});
-</script>
+
 
 
 
@@ -3225,7 +3224,7 @@ function doPrint(){
   }
   tb+='</tbody>';
   var w=window.open('','_p','width=1200,height=900');
-  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+esc(title)+'</title><style>@page{size:'+fmt2+' '+ori+';margin:8mm}body{font-family:sans-serif;margin:0}h1{font-size:13px;margin:0 0 5px}table{border-collapse:collapse;table-layout:fixed;width:100%}td,th{padding:0;overflow:hidden;min-width:0;box-sizing:border-box}</style></head><body><h1>'+esc(title)+'</h1><table>'+th+tb+'</table><script>window.onload=function(){window.print();window.close();}<\/script></body></html>');
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+esc(title)+'</title><style>@page{size:'+fmt2+' '+ori+';margin:8mm}body{font-family:sans-serif;margin:0}h1{font-size:13px;margin:0 0 5px}table{border-collapse:collapse;table-layout:fixed;width:100%}td,th{padding:0;overflow:hidden;min-width:0;box-sizing:border-box}<\/style><\/head><body><h1>'+esc(title)+'</h1><table>'+th+tb+'</table><scr'+'ipt>window.onload=function(){window.print();window.close();<\/scr'+'ipt><\/body><\/html>');
   w.document.close();
   closeModal('modalPrint');
 }
