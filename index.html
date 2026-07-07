@@ -1123,6 +1123,224 @@ window.saveEditLot = async (id)=>{
 };
 
 
+
+// ─── CONSTANTES ───
+const LIEUX = ['R:antec','Carnac','Locmariaquer','Etel','St Belène','Blaver','Golf'];
+const LIEU_BADGE = {
+  'R:antec':'b-blue','Carnac':'b-teal','Locmariaquer':'b-amber',
+  'Etel':'b-coral','St Belène':'b-purple','Blaver':'b-gray','Golf':'b-pink'
+};
+
+function lieuBadge(lieu){
+  return `<span class="badge ${LIEU_BADGE[lieu]||'b-gray'}">${lieu}</span>`;
+}
+
+function histoArr(lot){
+  if(!lot.historique) return [];
+  return Object.entries(lot.historique).sort((a,b)=>a[1].ts-b[1].ts);
+}
+
+function lotCode(l){
+  const initOrigine = l.origine ? l.origine.charAt(0).toUpperCase() : '?';
+  const initLieu = l.lieuActuel ? l.lieuActuel.charAt(0).toUpperCase() : '?';
+  const annee2 = String(l.annee||'').slice(-2);
+  const fractionMatch = (l.numero||'').match(/-(T|C|Q)$/i);
+  const fractionSuffix = fractionMatch ? '|'+fractionMatch[1].toUpperCase() : '';
+  const numeroBase = (l.numero||'').replace(/-(T|C|Q)$/i,'');
+  return numeroBase + initOrigine + annee2 + '|' + initLieu + fractionSuffix;
+}
+
+function lotCardHTML(id, l, isChild=false){
+  const code = lotCode(l);
+  const ops = l.historique ? Object.keys(l.historique).length : 0;
+  const indent = isChild ? 'margin-left:1.5rem;border-left:3px solid var(--border);border-radius:0 8px 8px 0;' : '';
+  return `<div class="lot-card" onclick="openLot('${id}')" style="${indent}">
+    <div class="lot-header">
+      <div>
+        <div class="lot-num">🦪 <span style="font-family:monospace;font-size:${isChild?'.9':'1'}rem;font-weight:600">${code}</span></div>
+        <div class="lot-meta">${l.origine||'Origine inconnue'}${l.quantite?' · '+l.quantite+(l.unite?' '+l.unite:''):''}</div>
+      </div>
+      <div style="text-align:right">
+        ${lieuBadge(l.lieuActuel)}
+        <div style="font-size:.7rem;color:var(--text2);margin-top:3px">${ops} opération(s)</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderStats(){
+  const arr = Object.values(lots);
+  const ops = arr.reduce((s,l)=>s+(l.historique?Object.keys(l.historique).length:0),0);
+  const lieux = new Set(arr.map(l=>l.lieuActuel)).size;
+  const now = new Date(); const mm = now.getMonth(), yy = now.getFullYear();
+  const recent = arr.flatMap(l=>histoArr(l).map(([k,h])=>h)).filter(h=>{
+    const d=new Date(h.date); return d.getMonth()===mm&&d.getFullYear()===yy;
+  }).length;
+  const st = document.getElementById('s-total'); if(st) st.textContent=arr.length;
+  const so = document.getElementById('s-ops'); if(so) so.textContent=ops;
+  const sl = document.getElementById('s-lieux'); if(sl) sl.textContent=lieux;
+  const sr = document.getElementById('s-recent'); if(sr) sr.textContent=recent;
+
+  const allOps = arr.flatMap(l=>{
+    const id = Object.keys(lots).find(k=>lots[k]===l);
+    return histoArr(l).map(([k,h])=>({...h,lotNum:l.numero,lotId:id}));
+  }).sort((a,b)=>b.ts-a.ts).slice(0,10);
+
+  const rl = document.getElementById('recent-list');
+  if(!rl) return;
+  if(!allOps.length){rl.innerHTML='<div class="empty">Aucune activité.</div>';return;}
+  rl.innerHTML=allOps.map(h=>`
+    <li class="tl-item">
+      <div class="tl-dot dot-${h.type}"></div><div class="tl-line"></div>
+      <div><div class="tl-title">Lot ${h.lotNum} — ${h.detail}</div>
+      <div class="tl-meta">${h.date}${h.lieu?' · '+h.lieu:''}</div></div>
+    </li>`).join('');
+}
+
+function renderLots(){
+  const q=(document.getElementById('search')||{value:''}).value.toLowerCase();
+  const fl=(document.getElementById('filter-lieu')||{value:''}).value;
+  const allEntries = Object.entries(lots);
+  const parents = allEntries.filter(([id,l])=>!(l.numero||'').match(/-(T|C|Q)$/i));
+  const children = allEntries.filter(([id,l])=>(l.numero||'').match(/-(T|C|Q)$/i));
+
+  const filteredParents = parents.filter(([id,l])=>{
+    const mq=!q||(l.numero||'').toLowerCase().includes(q)||(l.origine||'').toLowerCase().includes(q);
+    const ml=!fl||l.lieuActuel===fl;
+    const childMatch = children.filter(([cid,cl])=>(cl.numero||'').startsWith((l.numero||'')+'-'));
+    const childMl = childMatch.some(([cid,cl])=>!fl||cl.lieuActuel===fl);
+    return mq&&(ml||childMl);
+  }).sort((a,b)=>(b[1].createdAt||0)-(a[1].createdAt||0));
+
+  const ll = document.getElementById('lots-list');
+  if(!ll) return;
+
+  if(!filteredParents.length){
+    const orphans = children.filter(([id,l])=>{
+      const mq=!q||(l.numero||'').toLowerCase().includes(q)||(l.origine||'').toLowerCase().includes(q);
+      const ml=!fl||l.lieuActuel===fl;
+      return mq&&ml;
+    });
+    if(!orphans.length){ll.innerHTML='<div class="empty">Aucun lot trouvé.</div>';return;}
+    ll.innerHTML=orphans.map(([id,l])=>lotCardHTML(id,l,false)).join('');
+    return;
+  }
+
+  ll.innerHTML=filteredParents.map(([id,l])=>{
+    const myChildren = children
+      .filter(([cid,cl])=>(cl.numero||'').startsWith((l.numero||'')+'-'))
+      .filter(([cid,cl])=>!fl||cl.lieuActuel===fl);
+    const groupId='grp-'+id;
+    if(myChildren.length){
+      return `<div style="margin-bottom:10px">
+        <div class="lot-card" style="margin-bottom:0;border-radius:12px 12px 0 0" onclick="openLot('${id}')">
+          <div class="lot-header">
+            <div>
+              <div class="lot-num">🦪 <span style="font-family:monospace;font-size:1rem;font-weight:600">${lotCode(l)}</span></div>
+              <div class="lot-meta">${l.origine||'Origine inconnue'}${l.quantite?' · '+l.quantite+(l.unite?' '+l.unite:''):''}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="text-align:right">${lieuBadge(l.lieuActuel)}
+                <div style="font-size:.7rem;color:var(--text2);margin-top:3px">${l.historique?Object.keys(l.historique).length:0} opération(s)</div>
+              </div>
+              <button onclick="event.stopPropagation();toggleGroup('${groupId}')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:2px 6px;cursor:pointer;font-size:.75rem;color:var(--text2)" id="btn-${groupId}">
+                ▾ ${myChildren.length} fraction(s)
+              </button>
+            </div>
+          </div>
+        </div>
+        <div id="${groupId}" style="display:none">${myChildren.map(([cid,cl])=>lotCardHTML(cid,cl,true)).join('')}</div>
+      </div>`;
+    }
+    return '<div style="margin-bottom:10px">'+lotCardHTML(id,l,false)+'</div>';
+  }).join('');
+}
+
+window.toggleGroup = (groupId)=>{
+  const el=document.getElementById(groupId);
+  const btn=document.getElementById('btn-'+groupId);
+  if(!el)return;
+  const isOpen=el.style.display!=='none';
+  el.style.display=isOpen?'none':'block';
+  const count=el.querySelectorAll('.lot-card').length;
+  btn.textContent=(isOpen?'▾ ':'▴ ')+count+' fraction(s)';
+};
+
+function renderExport(){
+  const arr=Object.values(lots);
+  const lieux={};
+  arr.forEach(l=>{lieux[l.lieuActuel]=(lieux[l.lieuActuel]||0)+1;});
+  const rows=Object.entries(lieux).sort((a,b)=>b[1]-a[1]);
+  const rl=document.getElementById('repartition-list');
+  if(!rl)return;
+  rl.innerHTML=rows.length?rows.map(([l,n])=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:.85rem">
+      <span>${lieuBadge(l)}</span>
+      <span style="font-weight:500">${n} lot${n>1?'s':''}</span>
+    </div>`).join(''):'<div class="empty">Aucune donnée.</div>';
+}
+
+window.openLot = (id)=>{
+  currentLotId=id;
+  const lot=lots[id];
+  if(!lot)return;
+  document.getElementById('modal-lot-title').textContent='Lot '+lot.numero;
+  const hist=histoArr(lot).reverse();
+  const OPS=[['Criblage','🔬'],['Calibrage','📏'],['Dédobulage','✂️'],['Déplacement','📍'],['Remise à l\'eau','💧']];
+  document.getElementById('modal-lot-body').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem;font-size:.82rem">
+      <div><span style="color:var(--text2)">Origine</span><br><strong>${lot.origine||'—'}</strong></div>
+      <div><span style="color:var(--text2)">Lieu actuel</span><br>${lieuBadge(lot.lieuActuel)}</div>
+      <div><span style="color:var(--text2)">Année</span><br><strong>${lot.annee}</strong></div>
+      <div><span style="color:var(--text2)">Quantité</span><br><strong>${lot.quantite?lot.quantite+(lot.unite?' '+lot.unite:''):'—'}</strong></div>
+    </div>
+    <div style="margin-bottom:1rem">
+      <div style="font-size:.82rem;font-weight:500;margin-bottom:8px;color:var(--text2)">Ajouter une opération</div>
+      <div class="op-grid">${OPS.map(([op,ic])=>`<button class="op-btn" onclick="openOp('${op}')">${ic} ${op}</button>`).join('')}</div>
+    </div>
+    <div style="font-size:.82rem;font-weight:500;margin-bottom:8px">Historique (${hist.length})</div>
+    <ul class="timeline">${hist.length?hist.map(([k,h])=>`
+      <li class="tl-item">
+        <div class="tl-dot dot-${h.type}"></div><div class="tl-line"></div>
+        <div>
+          <div class="tl-title">${h.detail}</div>
+          <div class="tl-meta">${h.date}${h.lieu?' · '+h.lieu:''}</div>
+        </div>
+      </li>`).join(''):'<div class="empty" style="padding:1rem">Aucune opération.</div>'}</ul>
+    <div style="margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem;display:flex;gap:8px">
+      <button class="btn-action" onclick="openEditLot('${id}')">✏️ Modifier</button>
+      <button class="btn-action danger" onclick="deleteLot('${id}')">🗑 Supprimer</button>
+    </div>`;
+  document.getElementById('overlay-lot').classList.add('open');
+};
+
+window.deleteLot = async (id)=>{
+  const lot=lots[id];
+  if(!lot)return;
+  if(!confirm('Supprimer le lot '+lot.numero+' ?'))return;
+  await remove(lotRef(id));
+  closeModal('overlay-lot');
+};
+
+window.exportExcel = ()=>{
+  const arr=Object.entries(lots);
+  if(!arr.length){alert('Aucun lot à exporter.');return;}
+  const wb=XLSX.utils.book_new();
+  const lotsData=[['Numéro','Année','Origine','Lieu actuel','Quantité','Unité','Date entrée','Nb opérations','Notes'],
+    ...arr.map(([id,l])=>[l.numero,l.annee,l.origine,l.lieuActuel,l.quantite||'',l.unite||'',l.dateEntree,l.historique?Object.keys(l.historique).length:0,l.notes||''])];
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(lotsData),'Lots');
+  const histo=[['Lot','Type','Date','Lieu','Détail'],
+    ...arr.flatMap(([id,l])=>histoArr(l).map(([k,h])=>[l.numero,h.type,h.date,h.lieu||'',h.detail]))];
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(histo),'Historique');
+  XLSX.writeFile(wb,'lots_huitres_'+todayStr()+'.xlsx');
+};
+
+function renderAll(){
+  renderStats();
+  renderLots();
+  renderExport();
+}
+
 window.showTab = (name)=>{
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
