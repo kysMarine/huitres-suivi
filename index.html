@@ -44,7 +44,11 @@
   .btn-sm{padding:.3rem .7rem;font-size:.8rem;border-radius:6px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text)}
   .btn-sm:hover{background:var(--bg)}
   .main{flex:1;padding:1.5rem;max-width:900px;margin:0 auto;width:100%}
-  #tab-plan{width:100vw;position:relative;left:50%;transform:translateX(-50%);padding:0 1.5rem;}
+  /* Plan des parcs fullscreen */
+  #tab-plan{position:fixed;inset:0;z-index:40;flex-direction:column;background:#fff;display:none}
+  #tab-plan .header{position:relative;top:auto;flex-shrink:0}
+  #tab-plan .grid-wrap{flex:1;min-height:0}
+  #tab-plan .nav-parcs,#tab-plan .nav-zones{flex-shrink:0}
 
   /* TABS */
   .tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:1.5rem;overflow-x:auto}
@@ -414,12 +418,74 @@ td.blockcell.highlighted{outline:2px solid #e63946;outline-offset:-1px;z-index:2
       </div>
     </div>
 
+    <!-- ADMIN -->
+    <div id="tab-admin" class="section">
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-title">Demandes d'accès en attente</div>
+        <div id="admin-pending-list"><div class="loading">Chargement…</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Utilisateurs actifs</div>
+        <div id="admin-users-list"><div class="loading">Chargement…</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
     <!-- PLAN -->
-    <div id="tab-plan" class="section" style="padding:0;max-width:100%;overflow:hidden">
+<div id="tab-plan" class="section" style="display:none;position:fixed;inset:0;z-index:40;flex-direction:column;background:#fff">
+  <!-- BARRE D'OUTILS PLAN -->
+  <div style="background:#fff;border-bottom:1px solid #e2e8f0;padding:.5rem 1rem;display:flex;align-items:center;gap:8px;flex-wrap:nowrap;flex-shrink:0;overflow-x:auto">
+    <button onclick="showTab('dashboard')" style="padding:.35rem .75rem;border-radius:8px;font-size:.82rem;font-weight:500;cursor:pointer;border:1px solid #e2e8f0;background:#1e293b;color:#fff;white-space:nowrap">← Retour</button>
+    <div style="width:1px;height:20px;background:#e2e8f0;flex-shrink:0"></div>
+    <input type="text" id="inp-search" placeholder="Rechercher un lot..." style="width:160px;padding:.35rem .65rem;border:1px solid #e2e8f0;border-radius:7px;font-size:.82rem" onkeydown="if(event.key==='Enter')doSearch()">
+    <button onclick="doSearch()" style="padding:.35rem .75rem;border-radius:8px;font-size:.82rem;font-weight:500;cursor:pointer;border:none;background:#0ea5e9;color:#fff">Chercher</button>
+    <button onclick="clearSearch()" style="padding:.35rem .6rem;border-radius:8px;font-size:.82rem;cursor:pointer;border:1px solid #e2e8f0;background:#fff">✕</button>
+    <div style="width:1px;height:20px;background:#e2e8f0;flex-shrink:0"></div>
+    <label style="font-size:.75rem;color:#718096">Colonnes</label>
+    <input type="number" id="inp-cols" value="100" min="10" max="500" style="width:58px;padding:.3rem .5rem;border:1px solid #e2e8f0;border-radius:7px;font-size:.82rem">
+    <label style="font-size:.75rem;color:#718096">Rangées</label>
+    <input type="number" id="inp-rows" value="30" min="5" max="300" style="width:58px;padding:.3rem .5rem;border:1px solid #e2e8f0;border-radius:7px;font-size:.82rem">
+    <label style="font-size:.75rem;color:#718096">Poches/px</label>
+    <input type="number" id="inp-ppp" value="2" min="0.1" step="0.1" style="width:58px;padding:.3rem .5rem;border:1px solid #e2e8f0;border-radius:7px;font-size:.82rem">
+    <button onclick="applySettings()" style="padding:.35rem .75rem;border-radius:8px;font-size:.82rem;font-weight:500;cursor:pointer;border:none;background:#0ea5e9;color:#fff">Appliquer</button>
+    <div style="width:1px;height:20px;background:#e2e8f0;flex-shrink:0"></div>
+    <button onclick="doZoom(-0.15)" style="width:26px;height:26px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;font-size:15px">−</button>
+    <span id="zoom-label" style="font-size:.78rem;color:#718096;min-width:40px;text-align:center">100%</span>
+    <button onclick="doZoom(0.15)" style="width:26px;height:26px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;font-size:15px">+</button>
+    <button onclick="doZoom(-99)" style="padding:.35rem .65rem;border-radius:8px;font-size:.82rem;cursor:pointer;border:1px solid #e2e8f0;background:#fff">100%</button>
+    <div style="width:1px;height:20px;background:#e2e8f0;flex-shrink:0"></div>
+    <div style="position:relative;display:inline-block" id="dd-calculs">
+      <button onclick="toggleDD('dd-calculs')" style="padding:.35rem .75rem;border-radius:8px;font-size:.82rem;cursor:pointer;border:1px solid #e2e8f0;background:#fff;display:flex;align-items:center;gap:4px">Calculs <span style="font-size:.65rem;color:#718096">▾</span></button>
+      <div class="dropdown-menu" id="dd-calculs-menu">
+        <button class="dropdown-item" onclick="calcVides();closeDD()">📊 Emplacements vides</button>
+        <div class="dropdown-sep"></div>
+        <button class="dropdown-item" onclick="calcRef('K2');closeDD()">⚖️ Poids total K2</button>
+        <button class="dropdown-item" onclick="calcRef('K3');closeDD()">⚖️ Poids total K3</button>
+      </div>
+    </div>
+    <div style="width:1px;height:20px;background:#e2e8f0;flex-shrink:0"></div>
+    <button id="undoBtn" onclick="undo()" disabled style="padding:.35rem .75rem;border-radius:8px;font-size:.82rem;cursor:pointer;border:1px solid #e2e8f0;background:#fff">Annuler</button>
+    <button id="redoBtn" onclick="redo()" disabled style="padding:.35rem .75rem;border-radius:8px;font-size:.82rem;cursor:pointer;border:1px solid #e2e8f0;background:#fff">Rétablir</button>
+    <div style="width:1px;height:20px;background:#e2e8f0;flex-shrink:0"></div>
+    <button id="selModeBtn" onclick="toggleSelMode()" style="padding:.35rem .75rem;border-radius:8px;font-size:.82rem;cursor:pointer;border:1px solid #e2e8f0;background:#fff">Sélection</button>
+    <span id="selInfo" style="display:none;font-size:.75rem;color:#0ea5e9;padding:2px 8px;background:#e0f2fe;border-radius:6px"></span>
+    <div style="width:1px;height:20px;background:#e2e8f0;flex-shrink:0"></div>
+    <div style="position:relative;display:inline-block" id="dd-fichier">
+      <button onclick="toggleDD('dd-fichier')" style="padding:.35rem .75rem;border-radius:8px;font-size:.82rem;cursor:pointer;border:1px solid #e2e8f0;background:#fff;display:flex;align-items:center;gap:4px">Fichier <span style="font-size:.65rem;color:#718096">▾</span></button>
+      <div class="dropdown-menu" id="dd-fichier-menu">
+        <button class="dropdown-item" onclick="openPrint();closeDD()">🖨️ Imprimer</button>
+        <div class="dropdown-sep"></div>
+        <button class="dropdown-item" onclick="exportData();closeDD()">💾 Exporter (.json)</button>
+        <div class="dropdown-sep"></div>
+        <button class="dropdown-item" style="color:#e24b4a" onclick="resetAll();closeDD()">🗑 Tout effacer</button>
+      </div>
+    </div>
+  </div>
       <div class="nav-parcs" id="navParcs"></div>
       <div class="nav-zones" id="navZones"></div>
       <div class="results" id="plan-results"><div class="res-card" id="plan-res-content"></div></div>
-      <div class="grid-wrap" id="gridWrap" style="height:calc(100vh - 160px)">
+      <div class="grid-wrap" id="gridWrap" style="flex:1;min-height:0">
         <div class="grid-inner" id="gridInner">
           <table id="grid"></table>
         </div>
@@ -542,20 +608,6 @@ td.blockcell.highlighted{outline:2px solid #e63946;outline-offset:-1px;z-index:2
       </div>
       <div class="toast" id="plan-toast"></div>
     </div>
-
-    <!-- ADMIN -->
-    <div id="tab-admin" class="section">
-      <div class="card" style="margin-bottom:12px">
-        <div class="card-title">Demandes d'accès en attente</div>
-        <div id="admin-pending-list"><div class="loading">Chargement…</div></div>
-      </div>
-      <div class="card">
-        <div class="card-title">Utilisateurs actifs</div>
-        <div id="admin-users-list"><div class="loading">Chargement…</div></div>
-      </div>
-    </div>
-  </div>
-</div>
 
 <!-- MODAL LOT DETAIL -->
 <div class="overlay" id="overlay-lot">
@@ -1342,12 +1394,26 @@ function renderAll(){
 }
 
 window.showTab = (name)=>{
+  // Onglets normaux dans .main
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   const names=['dashboard','nouveau','lots','plan','export','admin'];
   document.querySelectorAll('.tab')[names.indexOf(name)]?.classList.add('active');
-  document.getElementById('tab-'+name)?.classList.add('active');
-  if(name==='plan') initPlanDesParcs();
+
+  if(name==='plan'){
+    // Plan = plein écran, masquer le .main
+    document.querySelector('.main').style.display='none';
+    document.querySelector('header').style.display='none';
+    const planEl=document.getElementById('tab-plan');
+    planEl.style.display='flex';
+    initPlanDesParcs();
+  } else {
+    // Autres onglets = affichage normal
+    document.querySelector('.main').style.display='';
+    document.querySelector('header').style.display='';
+    document.getElementById('tab-plan').style.display='none';
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    document.getElementById('tab-'+name)?.classList.add('active');
+  }
 };
 
 
