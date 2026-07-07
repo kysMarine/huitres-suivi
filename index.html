@@ -282,8 +282,8 @@ td.blockcell.highlighted{outline:2px solid #e63946;outline-offset:-1px;z-index:2
         <input type="text" id="search" placeholder="Rechercher un lot…" oninput="renderLots()">
         <select id="filter-lieu" onchange="renderLots()">
           <option value="">Tous les lieux</option>
-          <option>R:antec</option><option>Carnac</option><option>Locmariaquer</option>
-          <option>Etel</option><option>St Belène</option><option>Blaver</option><option>Golf</option>
+          <option Riantec</option><option>Carnac</option><option>Locmariaquer</option>
+          <option>Etel</option><option St Helene</option><option>Blaver</option><option>Golf</option>
         </select>
       </div>
       <div id="lots-list"><div class="loading">Chargement…</div></div>
@@ -300,8 +300,8 @@ td.blockcell.highlighted{outline:2px solid #e63946;outline-offset:-1px;z-index:2
           <div class="field-inline"><label>Origine</label><input type="text" id="n-origine" placeholder="ex: Bretagne Nord"></div>
           <div class="field-inline"><label>Lieu initial</label>
             <select id="n-lieu">
-              <option>R:antec</option><option>Carnac</option><option>Locmariaquer</option>
-              <option>Etel</option><option>St Belène</option><option>Blaver</option><option>Golf</option>
+              <option Riantec</option><option>Carnac</option><option>Locmariaquer</option>
+              <option>Etel</option><option St Helene</option><option>Blaver</option><option>Golf</option>
             </select>
           </div>
         </div>
@@ -328,8 +328,6 @@ td.blockcell.highlighted{outline:2px solid #e63946;outline-offset:-1px;z-index:2
     <input type="number" id="inp-cols" value="100" min="10" max="500" style="width:58px;padding:.3rem .5rem;border:1px solid #e2e8f0;border-radius:7px;font-size:.82rem">
     <label style="font-size:.75rem;color:#718096">Rangées</label>
     <input type="number" id="inp-rows" value="30" min="5" max="300" style="width:58px;padding:.3rem .5rem;border:1px solid #e2e8f0;border-radius:7px;font-size:.82rem">
-    <label style="font-size:.75rem;color:#718096">Poches/px</label>
-    <input type="number" id="inp-ppp" value="2" min="0.1" step="0.1" style="width:58px;padding:.3rem .5rem;border:1px solid #e2e8f0;border-radius:7px;font-size:.82rem">
     <button class="btn btn-primary" onclick="applySettings()">Appliquer</button>
     <div class="sep"></div>
     <button onclick="doZoom(-0.15)" style="width:26px;height:26px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;font-size:15px">−</button>
@@ -389,83 +387,76 @@ td.blockcell.highlighted{outline:2px solid #e63946;outline-offset:-1px;z-index:2
   </div>
 </div>
 
-<!-- MODAL LOT -->
-<div class="overlay" id="modalLot">
-  <div class="modal">
-    <div class="modal-title" id="lot-title">Nouveau lot</div>
-    <div class="field">
-      <label>Nombre de poches</label>
-      <div style="display:flex;gap:8px;align-items:center">
-        <input type="number" id="l-poches" min="1" value="10" style="flex:1">
-        <label style="display:flex;align-items:center;gap:5px;font-size:.78rem;color:#718096;cursor:pointer;white-space:nowrap">
-          <input type="checkbox" id="l-vide" onchange="toggleVide()"> Vide
-        </label>
-      </div>
+<!-- MODAL BLOC UNIFIE (Lot + Zone Libre) -->
+<div class="overlay" id="modalBloc">
+  <div class="modal" style="max-width:360px">
+    <!-- Onglets Lot / Zone Libre -->
+    <div style="display:flex;gap:0;margin-bottom:14px;border-bottom:2px solid #e2e8f0">
+      <button type="button" id="tab-lot-btn" onclick="switchBlocTab('lot')"
+        style="flex:1;padding:.5rem;font-size:.85rem;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid #0ea5e9;margin-bottom:-2px;color:#0ea5e9">
+        🦪 Lot
+      </button>
+      <button type="button" id="tab-libre-btn" onclick="switchBlocTab('libre')"
+        style="flex:1;padding:.5rem;font-size:.85rem;font-weight:500;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;color:#718096">
+        📐 Zone Libre
+      </button>
     </div>
-    <div id="lot-detail-fields">
-    <div class="field"><label>Grammage / Référence</label><input type="text" id="l-gram" placeholder="ex: 12 ou K2"></div>
-    <div class="field"><label>Numéro de lot</label><input type="text" id="l-lot" placeholder="ex: 02S25"></div>
-    <div class="field"><label>Poids/p (kg)</label><input type="number" id="l-poids" step="0.1" placeholder="ex: 2.4"></div>
-    <div class="field"><label>Date</label><input type="date" id="l-date"></div>
-    <div class="field"><label>Notes</label><input type="text" id="l-notes" placeholder="observations"></div>
-    </div>
-    <div class="field"><label>Direction</label>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;width:120px">
-        <span></span><button type="button" class="btn" id="d-up" onclick="setDir('up')">↑</button><span></span>
-        <button type="button" class="btn" id="d-left" onclick="setDir('left')">←</button>
-        <span style="display:flex;align-items:center;justify-content:center;font-size:.7rem;color:#ccc">●</span>
-        <button type="button" class="btn" id="d-right" onclick="setDir('right')">→</button>
-        <span></span><button type="button" class="btn" id="d-down" onclick="setDir('down')">↓</button><span></span>
-      </div>
-    </div>
-    <div class="field"><label>Couleur</label><div class="swatches" id="lot-swatches"></div></div>
-    <div class="field"><label>Style texte</label>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px">
-        <select id="l-fsize"><option value="8">Petit</option><option value="10" selected>Normal</option><option value="12">Grand</option></select>
-        <select id="l-fweight"><option value="400">Normal</option><option value="700" selected>Gras</option></select>
-        <select id="l-align"><option value="left">G</option><option value="center" selected>C</option><option value="right">D</option></select>
-      </div>
-    </div>
-    <div class="field"><label>Bordure</label>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:5px">
-        <select id="l-bwidth"><option value="1">Fine</option><option value="2" selected>Normale</option><option value="3">Épaisse</option></select>
-        <select id="l-bstyle"><option value="solid">Pleine</option><option value="double" selected>Double</option><option value="dashed">Pointillée</option></select>
-      </div>
-      <input type="color" id="l-bcolor" value="#1a202c" style="width:100%;height:32px;padding:2px;border:1px solid #e2e8f0;border-radius:7px">
-    </div>
-    <div class="modal-btns">
-      <button class="btn btn-primary" onclick="saveLot()">Enregistrer</button>
-      <button class="btn btn-danger" onclick="deleteLot()" id="del-lot" style="display:none">Supprimer</button>
-      <button class="btn" onclick="closeModal('modalLot')">Annuler</button>
-    </div>
-  </div>
-</div>
 
-<!-- MODAL LIBRE -->
-<div class="overlay" id="modalLibre">
-  <div class="modal">
-    <div class="modal-title">Zone libre</div>
-    <div class="info-box" id="libre-info"></div>
-    <div class="field"><label>Texte</label><input type="text" id="fr-text" placeholder="ex: Zone réservée, Accès..."></div>
-    <div class="field"><label>Couleur de fond</label><div class="swatches" id="libre-swatches"></div></div>
+    <!-- PANNEAU LOT -->
+    <div id="bloc-lot-panel">
+      <div class="field">
+        <label>Nombre de cases <span style="font-size:.72rem;color:#94a3b8" id="lot-cases-info"></span></label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="number" id="l-poches" min="1" value="1" style="flex:1">
+          <label style="display:flex;align-items:center;gap:5px;font-size:.78rem;color:#718096;cursor:pointer;white-space:nowrap">
+            <input type="checkbox" id="l-vide" onchange="toggleVide()"> Vide
+          </label>
+        </div>
+      </div>
+      <div id="lot-detail-fields">
+        <div class="field"><label>Grammage / Référence</label><input type="text" id="l-gram" placeholder="ex: K2, 23g"></div>
+        <div class="field"><label>Numéro de lot</label><input type="text" id="l-lot" placeholder="ex: 18M26"></div>
+        <div class="field"><label>Poids/p (kg)</label><input type="number" id="l-poids" step="0.1" placeholder="ex: 2.4"></div>
+        <div class="field"><label>Date</label><input type="date" id="l-date"></div>
+        <div class="field"><label>Notes</label><input type="text" id="l-notes" placeholder="observations"></div>
+      </div>
+      <div class="field"><label>Direction</label>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;width:110px">
+          <span></span><button type="button" class="btn" id="d-up" onclick="setDir('up')">↑</button><span></span>
+          <button type="button" class="btn" id="d-left" onclick="setDir('left')">←</button>
+          <span style="display:flex;align-items:center;justify-content:center;font-size:.7rem;color:#ccc">●</span>
+          <button type="button" class="btn" id="d-right" onclick="setDir('right')">→</button>
+          <span></span><button type="button" class="btn" id="d-down" onclick="setDir('down')">↓</button><span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANNEAU LIBRE -->
+    <div id="bloc-libre-panel" style="display:none">
+      <div class="info-box" id="libre-info" style="display:none"></div>
+      <div class="field"><label>Texte libre</label><input type="text" id="fr-text" placeholder="ex: Zone réservée, Accès..."></div>
+    </div>
+
+    <!-- COMMUN : Couleur + Style + Bordure -->
+    <div class="field"><label>Couleur</label><div class="swatches" id="bloc-swatches" style="display:flex;flex-wrap:wrap;gap:4px"></div></div>
     <div class="field"><label>Style texte</label>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px">
-        <select id="fr-fsize"><option value="8">Petit</option><option value="10" selected>Normal</option><option value="12">Grand</option></select>
-        <select id="fr-fweight"><option value="400">Normal</option><option value="700" selected>Gras</option></select>
-        <select id="fr-align"><option value="left">G</option><option value="center" selected>C</option><option value="right">D</option></select>
+        <select id="b-fsize"><option value="8">Petit</option><option value="10" selected>Normal</option><option value="12">Grand</option></select>
+        <select id="b-fweight"><option value="400">Normal</option><option value="700" selected>Gras</option></select>
+        <select id="b-align"><option value="left">G</option><option value="center" selected>C</option><option value="right">D</option></select>
       </div>
     </div>
     <div class="field"><label>Bordure</label>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:5px">
-        <select id="fr-bwidth"><option value="1">Fine</option><option value="2" selected>Normale</option><option value="3">Épaisse</option></select>
-        <select id="fr-bstyle"><option value="solid">Pleine</option><option value="double" selected>Double</option><option value="dashed">Pointillée</option></select>
+        <select id="b-bwidth"><option value="1">Fine</option><option value="2" selected>Normale</option><option value="3">Épaisse</option></select>
+        <select id="b-bstyle"><option value="solid">Pleine</option><option value="double" selected>Double</option><option value="dashed">Pointillée</option></select>
       </div>
-      <input type="color" id="fr-bcolor" value="#1a202c" style="width:100%;height:32px;padding:2px;border:1px solid #e2e8f0;border-radius:7px">
+      <input type="color" id="b-bcolor" value="#1a202c" style="width:100%;height:32px;padding:2px;border:1px solid #e2e8f0;border-radius:7px">
     </div>
     <div class="modal-btns">
-      <button class="btn btn-primary" onclick="saveLibre()">Enregistrer</button>
-      <button class="btn btn-danger" onclick="deleteLibre()" id="del-libre" style="display:none">Supprimer</button>
-      <button class="btn" onclick="closeModal('modalLibre')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveBloc()">Enregistrer</button>
+      <button class="btn btn-danger" onclick="deleteBloc()" id="del-bloc" style="display:none">Supprimer</button>
+      <button class="btn" onclick="closeModal('modalBloc')">Annuler</button>
     </div>
   </div>
 </div>
@@ -568,7 +559,13 @@ var editing = null;
 var dragSel = new Set();
 var dragActive = false, dragR0 = 0, dragC0 = 0;
 var stateHist = [], histIdx = -1;
-var COLORS = ['#FAC775','#85B7EB','#F0997B','#97C459','#ED93B1','#AFA9EC','#B4B2A9','#5DCAA5','#F87171','#34D399'];
+var COLORS = [
+  '#FAC775','#F59E0B','#F97316','#EF4444','#E11D48','#EC4899',
+  '#A855F7','#7C3AED','#6366F1','#3B82F6','#0EA5E9','#06B6D4',
+  '#10B981','#22C55E','#84CC16','#EAB308','#78716C','#94A3B8',
+  '#F87171','#FCA5A5','#FED7AA','#FEF08A','#BBF7D0','#BAE6FD',
+  '#E9D5FF','#FBCFE8','#C7D2FE','#D1FAE5','#FFFFFF','#1a202c'
+];
 var selColor = COLORS[0];
 var selDir = 'right';
 var selMode = false;
@@ -622,7 +619,6 @@ function syncInputs(){
   var t=curTab();
   document.getElementById('inp-cols').value=t.ncols;
   document.getElementById('inp-rows').value=t.nrows;
-  document.getElementById('inp-ppp').value=t.ppp;
 }
 
 // ── SETTINGS ──
@@ -630,7 +626,6 @@ function applySettings(){
   var t=curTab();
   t.ncols=Math.min(500,Math.max(10,parseInt(document.getElementById('inp-cols').value)||100));
   t.nrows=Math.min(300,Math.max(5,parseInt(document.getElementById('inp-rows').value)||30));
-  t.ppp=Math.max(0.1,parseFloat(document.getElementById('inp-ppp').value)||2);
   save();render();
 }
 
@@ -793,7 +788,7 @@ function toggleVide(){
     document.getElementById('l-poids').value = '';
     document.getElementById('l-notes').value = '';
     selColor = '#F87171';
-    buildSw('lot-swatches','pickLotColor');
+    buildBlocSw();
   }
 }
 
@@ -854,7 +849,7 @@ function doZoom(d){
 }
 
 // ── BLOCS ──
-function bpx(b){ return b.type==='libre'? Math.max(CELL,(b.nbcases||1)*CELL) : Math.max(CELL,Math.round((b.poches||1)/curTab().ppp)); }
+function bpx(b){ return Math.max(CELL,(b.nbcases||1)*CELL); }
 function bspan(b){ return Math.max(1,Math.min(500,Math.ceil(bpx(b)/CELL))); }
 function bcells(b){
   var span=bspan(b),cells=[];
@@ -1021,8 +1016,8 @@ function buildSw(id,onPick){
     return '<div class="swatch'+(c===selColor?' sel':'')+'" style="background:'+c+'" onclick="'+onPick+'(\''+c+'\')"></div>';
   }).join('');
 }
-function pickLotColor(c){selColor=c;buildSw('lot-swatches','pickLotColor');}
-function pickLibreColor(c){selColor=c;buildSw('libre-swatches','pickLibreColor');}
+function pickLotColor(clr){selColor=clr;buildBlocSw();}
+function pickLibreColor(clr){selColor=clr;buildBlocSw();}
 
 // ── DIR BUTTONS ──
 function setDir(d){
@@ -1034,137 +1029,150 @@ function setDir(d){
 }
 
 // ── OPEN MODALS ──
-function openNewLot(r,c){
-  editing={isNew:true,row:r,col:c};
-  document.getElementById('lot-title').textContent='Nouveau lot';
-  document.getElementById('l-poches').value=10;
-  document.getElementById('l-gram').value='';
-  document.getElementById('l-lot').value='';
-  document.getElementById('l-poids').value='';
-  document.getElementById('l-date').value=today();
-  document.getElementById('l-notes').value='';
-  document.getElementById('l-vide').checked=false;
-  document.getElementById('lot-detail-fields').style.display='block';
-  document.getElementById('l-fsize').value='10';
-  document.getElementById('l-fweight').value='700';
-  document.getElementById('l-align').value='center';
-  document.getElementById('l-bwidth').value='2';
-  document.getElementById('l-bstyle').value='double';
-  document.getElementById('l-bcolor').value='#1a202c';
-  selColor=COLORS[Math.floor(Math.random()*COLORS.length)];
-  selDir='right';
-  buildSw('lot-swatches','pickLotColor');
-  setDir('right');
-  document.getElementById('del-lot').style.display='none';
-  document.getElementById('modalLot').classList.add('open');
+// ── MODAL BLOC UNIFIE ──
+var currentBlocTab = 'lot';
+
+function switchBlocTab(tab){
+  currentBlocTab = tab;
+  var isLot = tab === 'lot';
+  // Onglets
+  document.getElementById('tab-lot-btn').style.borderBottomColor = isLot ? '#0ea5e9' : 'transparent';
+  document.getElementById('tab-lot-btn').style.color = isLot ? '#0ea5e9' : '#718096';
+  document.getElementById('tab-lot-btn').style.fontWeight = isLot ? '600' : '500';
+  document.getElementById('tab-libre-btn').style.borderBottomColor = isLot ? 'transparent' : '#0ea5e9';
+  document.getElementById('tab-libre-btn').style.color = isLot ? '#718096' : '#0ea5e9';
+  document.getElementById('tab-libre-btn').style.fontWeight = isLot ? '500' : '600';
+  // Panneaux
+  document.getElementById('bloc-lot-panel').style.display = isLot ? 'block' : 'none';
+  document.getElementById('bloc-libre-panel').style.display = isLot ? 'none' : 'block';
 }
 
-function openNewLibre(r,c,nb){
-  editing={isNew:true,row:r,col:c,nbcases:nb};
-  document.getElementById('libre-info').textContent=nb+' case'+(nb>1?'s':'')+' sélectionnée'+(nb>1?'s':'')+' · départ L'+(r+1)+' col '+(c+1);
-  document.getElementById('libre-info').style.display='block';
-  document.getElementById('fr-text').value='';
-  document.getElementById('fr-fsize').value='10';
-  document.getElementById('fr-fweight').value='700';
-  document.getElementById('fr-align').value='center';
-  document.getElementById('fr-bwidth').value='2';
-  document.getElementById('fr-bstyle').value='double';
-  document.getElementById('fr-bcolor').value='#1a202c';
-  selColor=COLORS[Math.floor(Math.random()*COLORS.length)];
-  buildSw('libre-swatches','pickLibreColor');
-  document.getElementById('del-libre').style.display='none';
-  document.getElementById('modalLibre').classList.add('open');
-}
+function openBloc(r, c, nb, tab, bi){
+  // bi = undefined pour nouveau, sinon index du bloc à éditer
+  var isNew = bi === undefined;
+  var b = isNew ? null : curTab().blocks[bi];
+  editing = isNew ? {isNew:true, row:r, col:c, nbcases:nb} : {isNew:false, bi:bi, row:b.row, col:b.col, nbcases:b.nbcases||nb||1};
 
-function openEditBlock(bi){
-  var b=curTab().blocks[bi];
-  editing={isNew:false,bi:bi};
-  selColor=b.color; selDir=b.dir||'right';
-  if(b.type==='libre'){
-    document.getElementById('libre-info').style.display='none';
-    document.getElementById('fr-text').value=b.text||'';
-    document.getElementById('fr-fsize').value=b.fsize||'10';
-    document.getElementById('fr-fweight').value=b.fweight||'700';
-    document.getElementById('fr-align').value=b.align||'center';
-    document.getElementById('fr-bwidth').value=b.bwidth||'2';
-    document.getElementById('fr-bstyle').value=b.bstyle||'double';
-    document.getElementById('fr-bcolor').value=b.bcolor||'#1a202c';
-    buildSw('libre-swatches','pickLibreColor');
-    document.getElementById('del-libre').style.display='inline-block';
-    document.getElementById('modalLibre').classList.add('open');
+  // Choisir onglet
+  var tab2 = tab || (b ? b.type : 'lot');
+  switchBlocTab(tab2);
+
+  // Remplir champs
+  var nbcases = editing.nbcases || 1;
+  document.getElementById('lot-cases-info').textContent = '(' + nbcases + ' case' + (nbcases>1?'s':'') + ')';
+  document.getElementById('l-poches').value = b ? (b.poches||nbcases) : nbcases;
+  document.getElementById('l-gram').value = b ? (b.gram||'') : '';
+  document.getElementById('l-lot').value = b ? (b.lot||'') : '';
+  document.getElementById('l-poids').value = b ? (b.poids||'') : '';
+  document.getElementById('l-date').value = b ? (b.date||today()) : today();
+  document.getElementById('l-notes').value = b ? (b.notes||'') : '';
+  var isVide = b ? !!b.vide : false;
+  document.getElementById('l-vide').checked = isVide;
+  document.getElementById('lot-detail-fields').style.display = isVide ? 'none' : 'block';
+  document.getElementById('fr-text').value = b ? (b.text||'') : '';
+  // Style commun
+  document.getElementById('b-fsize').value = b ? (b.fsize||'10') : '10';
+  document.getElementById('b-fweight').value = b ? (b.fweight||'700') : '700';
+  document.getElementById('b-align').value = b ? (b.align||'center') : 'center';
+  document.getElementById('b-bwidth').value = b ? (b.bwidth||'2') : '2';
+  document.getElementById('b-bstyle').value = b ? (b.bstyle||'double') : 'double';
+  document.getElementById('b-bcolor').value = b ? (b.bcolor||'#1a202c') : '#1a202c';
+  // Couleur
+  selColor = b ? b.color : COLORS[Math.floor(Math.random()*COLORS.length)];
+  if(isVide) selColor = '#F87171';
+  buildSw('bloc-swatches', 'pickBlocColor');
+  // Direction
+  selDir = b ? (b.dir||'right') : 'right';
+  setDir(selDir);
+  // Info libre
+  var li = document.getElementById('libre-info');
+  if(isNew && nb > 1){
+    li.textContent = nb + ' case' + (nb>1?'s':'') + ' · départ L'+(r+1)+' col '+(c+1);
+    li.style.display = 'block';
   } else {
-    document.getElementById('lot-title').textContent='Modifier le lot';
-    document.getElementById('l-poches').value=b.poches;
-    document.getElementById('l-gram').value=b.gram||'';
-    document.getElementById('l-lot').value=b.lot||'';
-    document.getElementById('l-poids').value=b.poids||'';
-    document.getElementById('l-date').value=b.date||'';
-    document.getElementById('l-notes').value=b.notes||'';
-    var isVide=!!b.vide;
-    document.getElementById('l-vide').checked=isVide;
-    document.getElementById('lot-detail-fields').style.display=isVide?'none':'block';
-    document.getElementById('l-fsize').value=b.fsize||'10';
-    document.getElementById('l-fweight').value=b.fweight||'700';
-    document.getElementById('l-align').value=b.align||'center';
-    document.getElementById('l-bwidth').value=b.bwidth||'2';
-    document.getElementById('l-bstyle').value=b.bstyle||'double';
-    document.getElementById('l-bcolor').value=b.bcolor||'#1a202c';
-    buildSw('lot-swatches','pickLotColor');
-    setDir(b.dir||'right');
-    document.getElementById('del-lot').style.display='inline-block';
-    document.getElementById('modalLot').classList.add('open');
+    li.style.display = 'none';
+  }
+  // Bouton supprimer
+  document.getElementById('del-bloc').style.display = isNew ? 'none' : 'inline-block';
+  document.getElementById('modalBloc').classList.add('open');
+}
+
+function openNewLot(r, c){ openBloc(r, c, 1, 'lot', undefined); }
+function openNewLibre(r, c, nb){ openBloc(r, c, nb, 'libre', undefined); }
+function openEditBlock(bi){ var b=curTab().blocks[bi]; openBloc(b.row, b.col, b.nbcases||1, b.type, bi); }
+
+function toggleVide(){
+  var isVide = document.getElementById('l-vide').checked;
+  document.getElementById('lot-detail-fields').style.display = isVide ? 'none' : 'block';
+  if(isVide){
+    document.getElementById('l-gram').value='';
+    document.getElementById('l-lot').value='';
+    document.getElementById('l-poids').value='';
+    document.getElementById('l-notes').value='';
+    selColor='#F87171';
+    buildSw('bloc-swatches','pickBlocColor');
   }
 }
 
+function pickBlocColor(c){ selColor=c; buildSw('bloc-swatches','pickBlocColor'); }
+
+function saveBloc(){
+  if(!editing) return;
+  var isLot = currentBlocTab === 'lot';
+  var isVide = isLot && document.getElementById('l-vide').checked;
+  var nbcases = editing.nbcases || 1;
+  var data = {
+    type: isLot ? 'lot' : 'libre',
+    row: editing.row, col: editing.col,
+    dir: selDir, color: selColor,
+    nbcases: isLot ? parseInt(document.getElementById('l-poches').value)||nbcases : nbcases,
+    fsize: document.getElementById('b-fsize').value,
+    fweight: document.getElementById('b-fweight').value,
+    align: document.getElementById('b-align').value,
+    bwidth: document.getElementById('b-bwidth').value,
+    bstyle: document.getElementById('b-bstyle').value,
+    bcolor: document.getElementById('b-bcolor').value
+  };
+  if(isLot){
+    data.vide = isVide;
+    data.poches = data.nbcases;
+    data.gram = isVide ? 'v' : document.getElementById('l-gram').value.trim();
+    data.lot = isVide ? '' : document.getElementById('l-lot').value.trim();
+    data.poids = isVide ? '' : document.getElementById('l-poids').value;
+    data.date = isVide ? '' : document.getElementById('l-date').value;
+    data.notes = isVide ? '' : document.getElementById('l-notes').value.trim();
+  } else {
+    data.text = document.getElementById('fr-text').value.trim();
+  }
+  if(editing.isNew) curTab().blocks.push(data);
+  else curTab().blocks[editing.bi] = data;
+  closeModal('modalBloc'); save(); render();
+  toast(isVide ? 'Emplacement vide enregistré' : (isLot ? 'Lot enregistré' : 'Zone enregistrée'));
+}
+
+function deleteBloc(){
+  if(!editing||editing.isNew) return;
+  curTab().blocks.splice(editing.bi,1);
+  closeModal('modalBloc'); save(); render(); toast('Bloc supprimé');
+}
+
+// Compatibilité anciens appels
+function saveLot(){ saveBloc(); }
+function saveLibre(){ saveBloc(); }
+function deleteLot(){ deleteBloc(); }
+function deleteLibre(){ deleteBloc(); }
+function buildSw(id, fn){ /* remplacé par buildBlocSw */ buildBlocSw(); }
+function buildBlocSw(){
+  var el = document.getElementById('bloc-swatches');
+  if(!el) return;
+  el.innerHTML = COLORS.map(function(clr){
+    return '<div class="swatch'+(clr===selColor?' sel':'')+'" style="background:'+clr+';border-color:'+(clr==='#FFFFFF'?'#e2e8f0':'transparent')+'" onclick="pickBlocColor(\''+clr+'\')"></div>';
+  }).join('');
+}
+// Rerouter buildSw vers buildBlocSw
+function buildSw(id, fn){ buildBlocSw(); }
+
 function closeModal(id){ document.getElementById(id).classList.remove('open'); editing=null; }
-
-// ── SAVE BLOCS ──
-function saveLot(){
-  if(!editing)return;
-  var isVide=document.getElementById('l-vide').checked;
-  var data={
-    type:'lot', row:editing.row!==undefined?editing.row:blocks[editing.bi].row,
-    col:editing.col!==undefined?editing.col:blocks[editing.bi].col,
-    dir:selDir, color:selColor,
-    vide:isVide,
-    poches:parseInt(document.getElementById('l-poches').value)||1,
-    gram:isVide?'v':''+document.getElementById('l-gram').value.trim(),
-    lot:isVide?'':document.getElementById('l-lot').value.trim(),
-    poids:isVide?'':document.getElementById('l-poids').value,
-    date:isVide?'':document.getElementById('l-date').value,
-    notes:isVide?'':document.getElementById('l-notes').value.trim(),
-    fsize:document.getElementById('l-fsize').value,
-    fweight:document.getElementById('l-fweight').value,
-    align:document.getElementById('l-align').value,
-    bwidth:document.getElementById('l-bwidth').value,
-    bstyle:document.getElementById('l-bstyle').value,
-    bcolor:document.getElementById('l-bcolor').value
-  };
-  if(editing.isNew)curTab().blocks.push(data); else curTab().blocks[editing.bi]=data;
-  closeModal('modalLot');save();render();toast(isVide?'Emplacement vide enregistré':'Bloc enregistré');
-}
-
-function saveLibre(){
-  if(!editing)return;
-  var row=editing.row!==undefined?editing.row:blocks[editing.bi].row;
-  var col=editing.col!==undefined?editing.col:blocks[editing.bi].col;
-  var nb=editing.nbcases||blocks[editing.bi].nbcases||1;
-  var data={
-    type:'libre', row:row, col:col, dir:'right', color:selColor, nbcases:nb,
-    text:document.getElementById('fr-text').value.trim(),
-    fsize:document.getElementById('fr-fsize').value,
-    fweight:document.getElementById('fr-fweight').value,
-    align:document.getElementById('fr-align').value,
-    bwidth:document.getElementById('fr-bwidth').value,
-    bstyle:document.getElementById('fr-bstyle').value,
-    bcolor:document.getElementById('fr-bcolor').value
-  };
-  if(editing.isNew)curTab().blocks.push(data); else curTab().blocks[editing.bi]=data;
-  closeModal('modalLibre');save();render();toast('Zone enregistrée');
-}
-
-function deleteLot(){ if(!editing||editing.isNew)return;curTab().blocks.splice(editing.bi,1);closeModal('modalLot');save();render();toast('Bloc supprimé'); }
-function deleteLibre(){ if(!editing||editing.isNew)return;curTab().blocks.splice(editing.bi,1);closeModal('modalLibre');save();render();toast('Zone supprimée'); }
 
 // ── RECHERCHE / CALCULS ──
 function doSearch(){
@@ -1320,7 +1328,7 @@ window.findLotInPlan = function(numero, firstOnly){
       var found=[];
       for(var bi=0;bi<zone.blocks.length;bi++){
         var b=zone.blocks[bi];
-        if(b.type==='lot'&&b.lot&&b.lot.trim().toLowerCase()===numero.trim().toLowerCase())
+        if(b.type==='lot'&&b.lot&&(b.lot.trim().split('|')[0].trim().toLowerCase()===numero.trim().split('|')[0].trim().toLowerCase()))
           found.push(bi);
       }
       if(found.length){
@@ -1898,10 +1906,10 @@ window.saveEditLot = async (id)=>{
 
 
 // --- CONSTANTES ---
-const LIEUX = ['R:antec','Carnac','Locmariaquer','Etel','St Belène','Blaver','Golf'];
+const LIEUX = ['Riantec','Carnac','Locmariaquer','Etel','St Helene','Blaver','Golf'];
 const LIEU_BADGE = {
-  'R:antec':'b-blue','Carnac':'b-teal','Locmariaquer':'b-amber',
-  'Etel':'b-coral','St Belène':'b-purple','Blaver':'b-gray','Golf':'b-pink'
+  'Riantec':'b-blue','Carnac':'b-teal','Locmariaquer':'b-amber',
+  'Etel':'b-coral','St Helene':'b-purple','Blaver':'b-gray','Golf':'b-pink'
 };
 
 function lieuBadge(lieu){
@@ -1927,9 +1935,10 @@ function lotCardHTML(id, l, isChild=false){
   const code = lotCode(l);
   const ops = l.historique ? Object.keys(l.historique).length : 0;
   const indent = isChild ? 'margin-left:1.5rem;border-left:3px solid var(--border);border-radius:0 8px 8px 0;' : '';
-  const inPlan = window.findLotInPlan ? window.findLotInPlan(l.numero, true) : null;
+  const numBase = l.numero ? l.numero.split('|')[0].trim() : '';
+  const inPlan = window.findLotInPlan && numBase ? window.findLotInPlan(numBase, true) : null;
   const planBtn = inPlan
-    ? `<button onclick="event.stopPropagation();goToLotInPlan('${l.numero}')" style="font-size:.72rem;padding:3px 8px;border-radius:6px;border:1px solid var(--primary);background:#e0f2fe;color:var(--primary);cursor:pointer;margin-top:4px;white-space:nowrap">🗺️ ${inPlan.parcName} › ${inPlan.zoneName}</button>`
+    ? `<button onclick="event.stopPropagation();goToLotInPlan('${numBase}')" style="font-size:.72rem;padding:3px 8px;border-radius:6px;border:1px solid var(--primary);background:#e0f2fe;color:var(--primary);cursor:pointer;margin-top:4px;white-space:nowrap">🗺️ ${inPlan.parcName} › ${inPlan.zoneName}</button>`
     : '';
   return `<div class="lot-card" onclick="openLot('${id}')" style="${indent}">
     <div class="lot-header">
