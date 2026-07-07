@@ -150,6 +150,110 @@
     .main{padding:1rem}
     header{padding:.75rem 1rem}
   }
+
+/* ═══ PLAN DES PARCS ═══ */
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8f9fa;color:#1a202c;height:100vh;display:flex;flex-direction:column}
+
+/* HEADER */
+.header{background:#fff;border-bottom:1px solid #e2e8f0;padding:.75rem 1.25rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap;z-index:50;flex-shrink:0}
+.header h1{font-size:1rem;font-weight:600;margin-right:8px}
+.btn{padding:.4rem .9rem;border-radius:8px;font-size:.82rem;font-weight:500;cursor:pointer;border:1px solid #e2e8f0;background:#fff;color:#1a202c;white-space:nowrap}
+.btn:hover{background:#f1f5f9}
+.btn-primary{background:#0ea5e9;color:#fff;border-color:#0ea5e9}
+.btn-primary:hover{background:#0284c7}
+.btn-danger{color:#e24b4a;border-color:#fecaca}
+.btn-danger:hover{background:#fff5f5}
+.sep{width:1px;height:20px;background:#e2e8f0;flex-shrink:0}
+.zoom-info{font-size:.78rem;color:#718096;min-width:40px;text-align:center}
+
+/* GRILLE */
+.grid-wrap{overflow:auto;flex:1;min-height:200px;cursor:crosshair;background:#fff}
+.grid-inner{display:inline-block}
+table{border-collapse:collapse;table-layout:fixed;width:0}
+col{width:20px}
+col.rowhead-col{width:40px}
+td,th{border:0.5px solid #e8eaed;padding:0;overflow:hidden;min-width:0;box-sizing:border-box}
+th.corner{position:sticky;top:0;left:0;z-index:10;background:#f8f9fa;width:40px;height:20px}
+th.ch{font-size:7px;color:#bbb;font-weight:400;background:#f8f9fa;height:20px;text-align:center;position:sticky;top:0;z-index:3;width:20px;min-width:20px;max-width:20px}
+th.rh{font-size:7px;color:#bbb;font-weight:400;background:#f8f9fa;width:40px;min-width:40px;max-width:40px;text-align:right;padding-right:4px;position:sticky;left:0;z-index:2}
+td.cell{width:20px;min-width:20px;max-width:20px;height:20px;min-height:20px;max-height:20px;background:#fff;cursor:crosshair}
+td.cell:hover{background:#eff6ff}
+td.cell.drag-sel{background:#bfdbfe}
+td.cell.zone-sel{background:#bbf7d0;outline:1px solid #22c55e;outline-offset:-1px}
+td.blockcell{font-size:8px;font-weight:600;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer}
+td.blockcell:hover{filter:brightness(.93)}
+td.blockcell.highlighted{outline:2px solid #e63946;outline-offset:-1px;z-index:2}
+
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:200;align-items:center;justify-content:center;padding:1rem}
+.overlay.open{display:flex}
+.modal{background:#fff;border-radius:14px;padding:1.25rem;width:100%;max-width:340px;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:.95rem;font-weight:600;margin-bottom:12px}
+.field{margin-bottom:9px}
+.field label{display:block;font-size:.75rem;color:#718096;margin-bottom:3px}
+.field input,.field select,.field textarea{width:100%;padding:.4rem .6rem;border:1px solid #e2e8f0;border-radius:7px;font-size:.82rem;font-family:inherit}
+.swatches{display:flex;gap:5px;flex-wrap:wrap;margin-top:4px}
+.swatch{width:22px;height:22px;border-radius:5px;cursor:pointer;border:2px solid transparent;flex-shrink:0}
+.swatch.sel{border-color:#1a202c}
+.modal-btns{display:flex;gap:7px;margin-top:12px}
+.modal-btns .btn{flex:1;text-align:center}
+.info-box{background:#e0f2fe;border:1px solid #bae6fd;border-radius:7px;padding:.4rem .7rem;font-size:.75rem;color:#075985;margin-bottom:9px;display:none}
+
+/* RESULTATS */
+.results{padding:.75rem 1.25rem;background:#fff;border-bottom:1px solid #e2e8f0;display:none;flex-shrink:0}
+.results.open{display:block}
+.res-card{font-size:.82rem}
+.res-card table{width:100%;border-collapse:collapse;margin-top:8px}
+.res-card th{text-align:left;padding:4px 8px;border-bottom:1px solid #e2e8f0;font-size:.75rem;font-weight:500;background:#f8f9fa}
+.res-card td{padding:4px 8px;border-bottom:1px solid #f1f5f9}
+.res-card tr:hover td{background:#f0f9ff;cursor:pointer}
+
+/* PRINT */
+@media print{
+  .header,.results{display:none!important}
+  .grid-wrap{height:auto;overflow:visible}
+  .grid-inner{transform:none!important}
+}
+
+/* ONGLETS */
+/* NAVIGATION PARCS / ZONES */
+.nav-parcs{display:flex;align-items:center;gap:0;background:#1e293b;padding:0 1rem;flex-shrink:0;overflow-x:auto}
+.parc-tab{padding:.5rem 1.1rem;font-size:.82rem;font-weight:500;cursor:pointer;border:none;background:none;color:#94a3b8;white-space:nowrap;display:flex;align-items:center;gap:6px;border-bottom:2px solid transparent}
+.parc-tab:hover{color:#e2e8f0}
+.parc-tab.active{color:#fff;border-bottom-color:#0ea5e9}
+.parc-add{padding:.5rem .8rem;font-size:1rem;color:#64748b;cursor:pointer;border:none;background:none}
+.parc-add:hover{color:#0ea5e9}
+.nav-zones{display:flex;align-items:center;gap:0;background:#f8fafc;border-bottom:1px solid #e2e8f0;padding:0 .75rem;flex-shrink:0;overflow-x:auto}
+.zone-tab{padding:.4rem .9rem;font-size:.8rem;font-weight:500;cursor:pointer;border:none;background:none;color:#64748b;white-space:nowrap;display:flex;align-items:center;gap:5px;border-bottom:2px solid transparent}
+.zone-tab:hover{color:#1a202c}
+.zone-tab.active{color:#0ea5e9;border-bottom-color:#0ea5e9;background:#fff}
+.zone-add{padding:.4rem .6rem;font-size:.9rem;color:#94a3b8;cursor:pointer;border:none;background:none}
+.zone-add:hover{color:#0ea5e9}
+.tab-close{font-size:.65rem;color:#a0aec0;cursor:pointer;border-radius:3px;padding:1px 3px;line-height:1}
+.tab-close:hover{background:#fecaca;color:#e24b4a}
+.nav-label{font-size:.7rem;font-weight:600;color:#475569;padding:0 .5rem 0 0;text-transform:uppercase;letter-spacing:.05em}
+/* MENU CONTEXTUEL */
+.ctx-menu{display:none;position:fixed;background:#fff;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.12);z-index:300;min-width:180px;overflow:hidden}
+.ctx-menu.open{display:block}
+.ctx-label{font-size:.72rem;font-weight:600;color:#718096;padding:.4rem .9rem .2rem;text-transform:uppercase;letter-spacing:.04em}
+.ctx-item{display:block;width:100%;text-align:left;padding:.5rem .9rem;font-size:.82rem;cursor:pointer;border:none;background:#fff;color:#1a202c}
+.ctx-item:hover{background:#f8f9fa}
+.ctx-danger{color:#e24b4a}
+.ctx-danger:hover{background:#fff5f5}
+.ctx-sep{height:1px;background:#e2e8f0;margin:2px 0}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a202c;color:#fff;padding:.5rem 1.1rem;border-radius:10px;font-size:.82rem;opacity:0;transition:opacity .25s;pointer-events:none;z-index:500}
+.toast.show{opacity:1}
+
+/* DROPDOWN */
+.dropdown{position:relative;display:inline-block}
+.dropdown-btn{display:flex;align-items:center;gap:4px}
+.dropdown-btn::after{content:'▾';font-size:.65rem;color:#718096}
+.dropdown-menu{display:none;position:absolute;top:calc(100% + 4px);left:0;background:#fff;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.1);min-width:160px;z-index:100;overflow:hidden}
+.dropdown-menu.open{display:block}
+.dropdown-item{display:block;width:100%;text-align:left;padding:.55rem 1rem;font-size:.82rem;font-weight:500;cursor:pointer;border:none;background:#fff;color:#1a202c}
+.dropdown-item:hover{background:#f8f9fa}
+.dropdown-sep{height:1px;background:#e2e8f0;margin:2px 0}
 </style>
 </head>
 <body>
@@ -311,45 +415,132 @@
     </div>
 
     <!-- PLAN -->
-    <div id="tab-plan" class="section">
-      <div class="card" style="margin-bottom:12px">
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
-          <div style="font-size:.95rem;font-weight:500">🗺️ Plan des parcs</div>
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-            <select id="plan-select" onchange="changerPlan()" style="padding:.4rem .7rem;border:1px solid var(--border);border-radius:8px;font-size:.82rem;background:var(--surface);color:var(--text)">
-              <option value="https://docs.google.com/spreadsheets/d/1fZSf0x9VgglfhACek6wTpMHq7GrNu8W9JYcrwLTVLzs/htmlview?usp=sharing">Locmariaquer</option>
-              <option value="https://docs.google.com/spreadsheets/d/12GTFWaA_xT5IvdXyhCiQAxjPiacOssCvo7jhAbsDlxs/htmlview?usp=sharing">Carnac</option>
-            </select>
-            <button class="btn-action" onclick="document.getElementById('plan-frame').src=document.getElementById('plan-frame').src" style="font-size:.8rem">🔄</button>
-          </div>
+    <div id="tab-plan" class="section" style="padding:0;max-width:100%;overflow:hidden">
+      <div class="nav-parcs" id="navParcs"></div>
+      <div class="nav-zones" id="navZones"></div>
+      <div class="results" id="plan-results"><div class="res-card" id="plan-res-content"></div></div>
+      <div class="grid-wrap" id="gridWrap" style="height:calc(100vh - 160px)">
+        <div class="grid-inner" id="gridInner">
+          <table id="grid"></table>
         </div>
-        <div style="border-top:1px solid var(--border);padding-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <select id="plan-lot-display" style="padding:.4rem .7rem;border:1px solid var(--border);border-radius:8px;font-size:.82rem;background:var(--surface);color:var(--text);min-width:180px">
-            <option value="">— Lots sur ce parc —</option>
-          </select>
-          <input type="text" id="plan-lot-search" placeholder="Saisir le numéro exact du lot…" style="padding:.4rem .7rem;border:1px solid var(--border);border-radius:8px;font-size:.82rem;background:var(--surface);color:var(--text);min-width:160px;flex:1" onkeydown="if(event.key==='Enter')searchLotInSheets()">
-          <button class="btn-action primary" onclick="searchLotInSheets()" style="font-size:.82rem">🔍 Voir les données</button>
-          <button class="btn-action" onclick="document.getElementById('sheets-result').innerHTML='';document.getElementById('plan-lot-search').value=''" style="font-size:.82rem">✕</button>
-        </div>
-        <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <span style="font-size:.8rem;color:var(--text2);font-weight:500">Trier tous les lots par date :</span>
-          <select id="sort-date-order" style="padding:.4rem .7rem;border:1px solid var(--border);border-radius:8px;font-size:.82rem;background:var(--surface);color:var(--text)">
-            <option value="asc">Plus ancienne d'abord</option>
-            <option value="desc">Plus récente d'abord</option>
-          </select>
-          <button class="btn-action primary" onclick="sortAllByDate()" style="font-size:.82rem">📅 Trier par date</button>
-          <button class="btn-action" onclick="sortAllByLot()" style="font-size:.82rem">🔤 Trier par lot (A→Z)</button>
-        </div>
-        <div id="sheets-result" style="margin-top:10px"></div>
       </div>
-      <div style="border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--surface)">
-        <iframe id="plan-frame"
-          src="https://docs.google.com/spreadsheets/d/1fZSf0x9VgglfhACek6wTpMHq7GrNu8W9JYcrwLTVLzs/htmlview?usp=sharing"
-          style="width:100%;height:82vh;border:none"
-          loading="lazy"
-          sandbox="allow-scripts allow-same-origin allow-popups">
-        </iframe>
+      <!-- MODAL LOT -->
+<div class="overlay" id="modalLot">
+  <div class="modal">
+    <div class="modal-title" id="lot-title">Nouveau lot</div>
+    <div class="field">
+      <label>Nombre de poches</label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="number" id="l-poches" min="1" value="10" style="flex:1">
+        <label style="display:flex;align-items:center;gap:5px;font-size:.78rem;color:#718096;cursor:pointer;white-space:nowrap">
+          <input type="checkbox" id="l-vide" onchange="toggleVide()"> Vide
+        </label>
       </div>
+    </div>
+    <div id="lot-detail-fields">
+    <div class="field"><label>Grammage / Référence</label><input type="text" id="l-gram" placeholder="ex: 12 ou K2"></div>
+    <div class="field"><label>Numéro de lot</label><input type="text" id="l-lot" placeholder="ex: 02S25"></div>
+    <div class="field"><label>Poids/p (kg)</label><input type="number" id="l-poids" step="0.1" placeholder="ex: 2.4"></div>
+    <div class="field"><label>Date</label><input type="date" id="l-date"></div>
+    <div class="field"><label>Notes</label><input type="text" id="l-notes" placeholder="observations"></div>
+    </div>
+    <div class="field"><label>Direction</label>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;width:120px">
+        <span></span><button type="button" class="btn" id="d-up" onclick="setDir('up')">↑</button><span></span>
+        <button type="button" class="btn" id="d-left" onclick="setDir('left')">←</button>
+        <span style="display:flex;align-items:center;justify-content:center;font-size:.7rem;color:#ccc">●</span>
+        <button type="button" class="btn" id="d-right" onclick="setDir('right')">→</button>
+        <span></span><button type="button" class="btn" id="d-down" onclick="setDir('down')">↓</button><span></span>
+      </div>
+    </div>
+    <div class="field"><label>Couleur</label><div class="swatches" id="lot-swatches"></div></div>
+    <div class="field"><label>Style texte</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px">
+        <select id="l-fsize"><option value="8">Petit</option><option value="10" selected>Normal</option><option value="12">Grand</option></select>
+        <select id="l-fweight"><option value="400">Normal</option><option value="700" selected>Gras</option></select>
+        <select id="l-align"><option value="left">G</option><option value="center" selected>C</option><option value="right">D</option></select>
+      </div>
+    </div>
+    <div class="field"><label>Bordure</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:5px">
+        <select id="l-bwidth"><option value="1">Fine</option><option value="2" selected>Normale</option><option value="3">Épaisse</option></select>
+        <select id="l-bstyle"><option value="solid">Pleine</option><option value="double" selected>Double</option><option value="dashed">Pointillée</option></select>
+      </div>
+      <input type="color" id="l-bcolor" value="#1a202c" style="width:100%;height:32px;padding:2px;border:1px solid #e2e8f0;border-radius:7px">
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-primary" onclick="saveLot()">Enregistrer</button>
+      <button class="btn btn-danger" onclick="deleteLot()" id="del-lot" style="display:none">Supprimer</button>
+      <button class="btn" onclick="closeModal('modalLot')">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL LIBRE -->
+<div class="overlay" id="modalLibre">
+  <div class="modal">
+    <div class="modal-title">Zone libre</div>
+    <div class="info-box" id="libre-info"></div>
+    <div class="field"><label>Texte</label><input type="text" id="fr-text" placeholder="ex: Zone réservée, Accès..."></div>
+    <div class="field"><label>Couleur de fond</label><div class="swatches" id="libre-swatches"></div></div>
+    <div class="field"><label>Style texte</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px">
+        <select id="fr-fsize"><option value="8">Petit</option><option value="10" selected>Normal</option><option value="12">Grand</option></select>
+        <select id="fr-fweight"><option value="400">Normal</option><option value="700" selected>Gras</option></select>
+        <select id="fr-align"><option value="left">G</option><option value="center" selected>C</option><option value="right">D</option></select>
+      </div>
+    </div>
+    <div class="field"><label>Bordure</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:5px">
+        <select id="fr-bwidth"><option value="1">Fine</option><option value="2" selected>Normale</option><option value="3">Épaisse</option></select>
+        <select id="fr-bstyle"><option value="solid">Pleine</option><option value="double" selected>Double</option><option value="dashed">Pointillée</option></select>
+      </div>
+      <input type="color" id="fr-bcolor" value="#1a202c" style="width:100%;height:32px;padding:2px;border:1px solid #e2e8f0;border-radius:7px">
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-primary" onclick="saveLibre()">Enregistrer</button>
+      <button class="btn btn-danger" onclick="deleteLibre()" id="del-libre" style="display:none">Supprimer</button>
+      <button class="btn" onclick="closeModal('modalLibre')">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL IMPRESSION -->
+<div class="overlay" id="modalPrint">
+  <div class="modal">
+    <div class="modal-title">Impression</div>
+    <div class="field"><label>Titre</label><input type="text" id="pr-title" value="Plan des parcs"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="field"><label>Format</label><select id="pr-format"><option value="A4">A4</option><option value="A3" selected>A3</option></select></div>
+      <div class="field"><label>Orientation</label><select id="pr-orient"><option value="landscape" selected>Paysage</option><option value="portrait">Portrait</option></select></div>
+    </div>
+    <div class="field"><label>Colonnes (de → à)</label>
+      <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:5px;align-items:center">
+        <input type="number" id="pr-c1" value="1" min="1"><span style="text-align:center;font-size:.75rem;color:#999">→</span><input type="number" id="pr-c2" min="1">
+      </div>
+    </div>
+    <div class="field"><label>Rangées (de → à)</label>
+      <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:5px;align-items:center">
+        <input type="number" id="pr-r1" value="1" min="1"><span style="text-align:center;font-size:.75rem;color:#999">→</span><input type="number" id="pr-r2" min="1">
+      </div>
+    </div>
+    <div class="field"><label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="pr-nums" checked> Numéros colonnes/rangées</label></div>
+    <div class="field"><label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="pr-empty" checked> Quadrillage vide</label></div>
+    <div class="field" id="pr-sel-field" style="display:none"><label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="pr-sel-only"> Imprimer uniquement la sélection</label></div>
+    <div class="modal-btns">
+      <button class="btn btn-primary" onclick="doPrint()">🖨️ Lancer</button>
+      <button class="btn" onclick="closeModal('modalPrint')">Annuler</button>
+    </div>
+  </div>
+</div>
+      <div class="ctx-menu" id="ctxMenu">
+        <div class="ctx-label" id="ctxLabel"></div>
+        <button class="ctx-item" id="ctx-ins-before" onclick="ctxAction('ins-before')"></button>
+        <button class="ctx-item" id="ctx-ins-after" onclick="ctxAction('ins-after')"></button>
+        <div class="ctx-sep"></div>
+        <button class="ctx-item ctx-danger" id="ctx-delete" onclick="ctxAction('delete')"></button>
+      </div>
+      <div class="toast" id="plan-toast"></div>
     </div>
 
     <!-- ADMIN -->
@@ -932,693 +1123,13 @@ window.saveEditLot = async (id)=>{
 };
 
 
-// ─── GOOGLE SHEETS API ───
-const SHEETS_API_KEY = 'AIzaSyC3uvsTue-0hlzKUYC9emPnOoCkIhA7N5s';
-const SHEET_IDS = {
-  'Locmariaquer': '1fZSf0x9VgglfhACek6wTpMHq7GrNu8W9JYcrwLTVLzs',
-  'Carnac': '12GTFWaA_xT5IvdXyhCiQAxjPiacOssCvo7jhAbsDlxs',
-};
-
-function parsePoches(cell, lotNum) {
-  // Cherche le numéro de lot dans la cellule (insensible à la casse)
-  if(!cell || !cell.toLowerCase().includes(lotNum.toLowerCase())) return null;
-  const result = { raw: cell, poches: null, grammage: null, poids: null, rangee: null };
-  // Extraire Xp (poches)
-  const pochesMatch = cell.match(/(\d+)\s*p\b/i);
-  if(pochesMatch) result.poches = pochesMatch[1] + 'p';
-  // Extraire Xg (grammage)
-  const gramMatch = cell.match(/(\d+)\s*g\b/i);
-  if(gramMatch) result.grammage = gramMatch[1] + 'g';
-  // Extraire X,Xkg ou X.Xkg (poids)
-  const poidsMatch = cell.match(/(\d+[,.]\d+|\d+)\s*kg/i);
-  if(poidsMatch) result.poids = poidsMatch[1].replace(',','.') + ' kg';
-  return result;
-}
-
-window.loadSheetsData = async (lotId, lotNum) => {
-  const el = document.getElementById('sheets-data-' + lotId);
-  if(!el) return;
-  el.innerHTML = '<div style="color:var(--text2);font-size:.8rem">🔄 Recherche en cours...</div>';
-  
-  const results = [];
-  
-  for(const [parc, sheetId] of Object.entries(SHEET_IDS)) {
-    try {
-      // Récupérer toutes les cellules de la feuille
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/A1:ZZ500?key=${SHEETS_API_KEY}`;
-      const resp = await fetch(url);
-      if(!resp.ok) continue;
-      const data = await resp.json();
-      const rows = data.values || [];
-      
-      // Chercher le numéro de lot dans toutes les cellules
-      rows.forEach((row, rowIdx) => {
-        row.forEach((cell, colIdx) => {
-          const parsed = parsePoches(cell, lotNum);
-          if(parsed) {
-            results.push({
-              parc,
-              rangee: rowIdx + 1,
-              colonne: String.fromCharCode(65 + colIdx),
-              ...parsed
-            });
-          }
-        });
-      });
-    } catch(e) {
-      console.error('Sheets API error for ' + parc, e);
-    }
-  }
-  
-  if(!results.length) {
-    el.innerHTML = '<div style="color:var(--text2);font-size:.8rem;padding:8px 0">Aucune occurrence trouvée dans les plans.</div>';
-    return;
-  }
-  
-  el.innerHTML = `
-    <div style="overflow-x:auto;margin-top:4px">
-      <table style="width:100%;border-collapse:collapse;font-size:.78rem">
-        <thead>
-          <tr style="background:var(--bg);border-bottom:1px solid var(--border)">
-            <th style="padding:6px 8px;text-align:left;font-weight:500">Parc</th>
-            <th style="padding:6px 8px;text-align:left;font-weight:500">Rangée</th>
-            <th style="padding:6px 8px;text-align:left;font-weight:500">Poches</th>
-            <th style="padding:6px 8px;text-align:left;font-weight:500">Grammage</th>
-            <th style="padding:6px 8px;text-align:left;font-weight:500">Poids/p</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${results.map(r=>`
-          <tr style="border-bottom:1px solid var(--border)">
-            <td style="padding:6px 8px"><span class="badge ${LIEU_BADGE[r.parc]||'b-gray'}">${r.parc}</span></td>
-            <td style="padding:6px 8px;color:var(--text2)">L${r.rangee}</td>
-            <td style="padding:6px 8px;font-weight:500">${r.poches||'—'}</td>
-            <td style="padding:6px 8px">${r.grammage||'—'}</td>
-            <td style="padding:6px 8px">${r.poids||'—'}</td>
-          </tr>`).join('')}
-        </tbody>
-      </table>
-    </div>
-    <div style="font-size:.72rem;color:var(--text2);margin-top:6px">${results.length} occurrence(s) trouvée(s)</div>
-  `;
-};
-
-window.searchLotInSheets = async ()=>{
-  const lotNum = document.getElementById('plan-lot-search').value.trim();
-  if(!lotNum){alert('Saisissez un numéro de lot.');return;}
-  const planUrl = document.getElementById('plan-select').value;
-  const lieu = URL_TO_LIEU[planUrl]||'';
-  const sheetId = SHEET_IDS[lieu];
-  if(!sheetId){alert('Aucune sheet configurée pour ce parc.');return;}
-
-  const el = document.getElementById('sheets-result');
-  el.innerHTML = '<div style="color:var(--text2);font-size:.8rem;padding:6px 0">🔄 Recherche en cours...</div>';
-
-  try{
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/A1:ZZ500?key=${SHEETS_API_KEY}`;
-    const resp = await fetch(url);
-    if(!resp.ok) throw new Error('API error '+resp.status);
-    const data = await resp.json();
-    const rows = data.values||[];
-
-    const found = [];
-    rows.forEach((row, rowIdx)=>{
-      row.forEach((cell)=>{
-        // Le numéro doit être précédé d'un séparateur ET suivi d'un séparateur, lettre optionnelle, ou fin
-        // 02M24 matche 02M24 et 02M24R mais PAS 02S25 ni 02M241
-        const escapedLot = lotNum.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const lotRegex = new RegExp('(^|[\\s\\-/|])' + escapedLot + '([A-Za-z]{0,3})([\\s\\-/|,]|$)', 'i');
-        if(!cell||!lotRegex.test(cell)) return;
-        // Poches : tous les nombres suivis de p dans la cellule (gère les cellules coupées type "18p12g 02S25")
-        let totalPoches = 0;
-        const allPochesMatches = cell.matchAll(/(\d+)\s*p\b/gi);
-        for(const m of allPochesMatches){ totalPoches += parseInt(m[1]); }
-        // Grammage : nombre suivi de g avant le numéro de lot
-        const idxMatch = cell.search(new RegExp('(^|[\\s\\-/|])' + lotNum.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'));
-        const idx = idxMatch >= 0 ? idxMatch : 0;
-        const beforeLot = idx>0 ? cell.substring(0, idx) : cell;
-        // Grammage : soit Xg soit calibre K1/K2/K3/K4/K5/K4-K5/K4/K5 soit En1/En2/En3/En4
-        const gramMatch = beforeLot.match(/\b(\d+)\s*g\b/i);
-        const calibreMatch = !gramMatch ? beforeLot.match(/\b(K[1-5](?:[/-]K[1-5])?|En[1-4])\b/i) : null;
-        // Poids : nombre décimal suivi de kg après le numéro de lot
-        const afterLot = idx>=0 ? cell.substring(idx) : cell;
-        const poidsMatch = afterLot.match(/(\d+[,.]\d+|\d+)\s*kg/i);
-        found.push({
-          poches   : totalPoches,
-          grammage : gramMatch ? gramMatch[1]+'g' : (calibreMatch ? calibreMatch[1] : '—'),
-          poids    : poidsMatch ? parseFloat(poidsMatch[1].replace(',','.')) : null,
-          raw      : cell,
-          rangee   : rowIdx+1
-        });
-      });
-    });
-
-    if(!found.length){
-      el.innerHTML='<div style="color:var(--text2);font-size:.8rem;padding:6px 0">Aucune occurrence trouvée pour <strong>'+lotNum+'</strong>.</div>';
-      return;
-    }
-
-    // Regrouper par grammage + poids
-    const grouped = {};
-    found.forEach(f=>{
-      const key = f.grammage+'|'+(f.poids||'');  // grammage inclut déjà K1/K2/etc ou Xg
-      if(!grouped[key]){
-        grouped[key]={grammage:f.grammage, poids:f.poids, poches:0, rangees:[]};
-      }
-      grouped[key].poches += f.poches;
-      grouped[key].rangees.push('L'+f.rangee);
-    });
-
-    const rows_html = Object.values(grouped).filter(g=>g.poches>0).sort((a,b)=>{
-      const ag=parseInt(a.grammage)||0, bg=parseInt(b.grammage)||0;
-      return bg-ag;
-    }).map(g=>`
-      <tr style="border-bottom:1px solid var(--border)">
-        <td style="padding:7px 10px;font-weight:600">${g.poches}p</td>
-        <td style="padding:7px 10px">${g.grammage}</td>
-        <td style="padding:7px 10px">${g.poids?g.poids+' kg':'—'}</td>
-      </tr>`).join('');
-
-    const total = Object.values(grouped).reduce((s,g)=>s+g.poches,0);
-
-    el.innerHTML = `
-      <div style="font-size:.82rem;font-weight:500;margin-bottom:8px">Résultats pour <span style="font-family:monospace">${lotNum}</span> — ${lieu}</div>
-      <div style="overflow-x:auto;border-radius:8px;border:1px solid var(--border)">
-        <table style="width:100%;border-collapse:collapse;font-size:.82rem">
-          <thead>
-            <tr style="background:var(--bg)">
-              <th style="padding:7px 10px;text-align:left;font-weight:500;border-bottom:1px solid var(--border)">Poches</th>
-              <th style="padding:7px 10px;text-align:left;font-weight:500;border-bottom:1px solid var(--border)">Grammage</th>
-              <th style="padding:7px 10px;text-align:left;font-weight:500;border-bottom:1px solid var(--border)">Poids/p</th>
-            </tr>
-          </thead>
-          <tbody>${rows_html}</tbody>
-          <tfoot>
-            <tr style="background:var(--bg);border-top:2px solid var(--border)">
-              <td style="padding:7px 10px;font-weight:700">${total}p</td>
-              <td colspan="2" style="padding:7px 10px;color:var(--text2);font-size:.75rem">Total</td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>`;
-  }catch(e){
-    el.innerHTML='<div style="color:var(--danger);font-size:.8rem;padding:6px 0">Erreur : '+e.message+'</div>';
-  }
-};
-
-async function fetchAndMergeItems(sheetId){
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/A1:ZZ500?key=${SHEETS_API_KEY}`;
-  const resp = await fetch(url);
-  if(!resp.ok) throw new Error('API error '+resp.status);
-  const data = await resp.json();
-  const rows = data.values||[];
-
-  const items = [];
-  const dateRegex = /(\d{2})\/(\d{2})\/(\d{2,4})/;
-
-  rows.forEach((row, rowIdx)=>{
-    row.forEach((cell)=>{
-      if(!cell || typeof cell !== 'string') return;
-      const dateMatch = cell.match(dateRegex);
-      if(!dateMatch) return;
-      let totalPoches = 0;
-      const pochesMatches = cell.matchAll(/(\d+)\s*p\b/gi);
-      for(const m of pochesMatches){ totalPoches += parseInt(m[1]); }
-      if(totalPoches === 0) return;
-
-      let [, dd, mm, yyyy] = dateMatch;
-      if(yyyy.length===2) yyyy = '20'+yyyy;
-      const dateObj = new Date(parseInt(yyyy), parseInt(mm)-1, parseInt(dd));
-
-      const gramMatch = cell.match(/\b(\d+)\s*g\b/i);
-      const calibreMatch = !gramMatch ? cell.match(/\b(K[1-5](?:[/-]K[1-5])?|En[1-4])\b/i) : null;
-      const poidsMatch = cell.match(/(\d+[,.]\d+|\d+)\s*kg/i);
-      // Préfixes spéciaux avec suffixe (Issu F3, Issu F4, Dvrs STM, Dvrs M...)
-      let lotMatch = cell.match(/\b(issu|dvrs)\s+([A-Za-zÀ-ÿ0-9]+)\b/i);
-      let lotName = lotMatch ? (lotMatch[1].charAt(0).toUpperCase()+lotMatch[1].slice(1).toLowerCase()+' '+lotMatch[2].toUpperCase()) : null;
-      if(!lotName){
-        const codeMatch = cell.match(/\b(\d{1,3}[A-Z]\d{2}[A-Z]{0,2})\b/i);
-        lotName = codeMatch ? codeMatch[1] : null;
-      }
-      if(!lotName){
-        const wordsMatch = cell.match(/\b[A-Za-zÀ-ÿ]{3,}\b/g) || [];
-        const stopWords = ['kg','kgp','piquet','attention','acces','tracteur','ne','pas','sortir','par','le','haut','des','files'];
-        const candidate = wordsMatch.find(w => !stopWords.includes(w.toLowerCase()));
-        lotName = candidate || '—';
-      }
-
-      items.push({
-        date: dateObj,
-        dateStr: dd+'/'+mm+'/'+yyyy,
-        poches: totalPoches,
-        grammage: gramMatch ? gramMatch[1]+'g' : (calibreMatch ? calibreMatch[1] : '—'),
-        poids: poidsMatch ? parseFloat(poidsMatch[1].replace(',','.')) : null,
-        lot: lotName,
-        rangee: rowIdx+1,
-        raw: cell
-      });
-    });
-  });
-
-  if(!items.length) return [];
-
-  const groupedItems = {};
-  items.forEach(it=>{
-    const key = it.dateStr+'|'+it.lot+'|'+it.grammage+'|'+(it.poids||'');
-    if(!groupedItems[key]){
-      groupedItems[key] = {...it, poches:0};
-    }
-    groupedItems[key].poches += it.poches;
-  });
-  return Object.values(groupedItems);
-}
-
-function renderSheetsTable(mergedItems, lieu, subtitle){
-  const el = document.getElementById('sheets-result');
-  if(!mergedItems.length){
-    el.innerHTML = '<div style="color:var(--text2);font-size:.8rem;padding:6px 0">Aucune donnée trouvée.</div>';
-    return;
-  }
-  const rows_html = mergedItems.map(it=>`
-    <tr style="border-bottom:1px solid var(--border)">
-      <td style="padding:7px 10px;font-weight:500">${it.dateStr}</td>
-      <td style="padding:7px 10px;font-family:monospace">${it.lot}</td>
-      <td style="padding:7px 10px;font-weight:600">${it.poches}p</td>
-      <td style="padding:7px 10px">${it.grammage}</td>
-      <td style="padding:7px 10px">${it.poids?it.poids+' kg':'—'}</td>
-    </tr>`).join('');
-
-  el.innerHTML = `
-    <div style="font-size:.82rem;font-weight:500;margin-bottom:8px">Tous les lots — ${lieu} (${mergedItems.length} entrée${mergedItems.length>1?'s':''}, ${subtitle})</div>
-    <div style="overflow-x:auto;border-radius:8px;border:1px solid var(--border);max-height:500px;overflow-y:auto">
-      <table style="width:100%;border-collapse:collapse;font-size:.8rem">
-        <thead>
-          <tr style="background:var(--bg);position:sticky;top:0">
-            <th style="padding:7px 10px;text-align:left;font-weight:500;border-bottom:1px solid var(--border)">Date</th>
-            <th style="padding:7px 10px;text-align:left;font-weight:500;border-bottom:1px solid var(--border)">Lot</th>
-            <th style="padding:7px 10px;text-align:left;font-weight:500;border-bottom:1px solid var(--border)">Poches</th>
-            <th style="padding:7px 10px;text-align:left;font-weight:500;border-bottom:1px solid var(--border)">Grammage</th>
-            <th style="padding:7px 10px;text-align:left;font-weight:500;border-bottom:1px solid var(--border)">Poids/p</th>
-          </tr>
-        </thead>
-        <tbody>${rows_html}</tbody>
-      </table>
-    </div>`;
-}
-
-window.sortAllByDate = async ()=>{
-  const planUrl = document.getElementById('plan-select').value;
-  const lieu = URL_TO_LIEU[planUrl]||'';
-  const sheetId = SHEET_IDS[lieu];
-  if(!sheetId){alert('Aucune sheet configurée pour ce parc.');return;}
-  const order = document.getElementById('sort-date-order').value;
-
-  const el = document.getElementById('sheets-result');
-  el.innerHTML = '<div style="color:var(--text2);font-size:.8rem;padding:6px 0">🔄 Chargement et tri en cours...</div>';
-
-  try{
-    const mergedItems = await fetchAndMergeItems(sheetId);
-    mergedItems.sort((a,b)=> order==='asc' ? a.date-b.date : b.date-a.date);
-    renderSheetsTable(mergedItems, lieu, order==='asc'?'plus ancienne d\'abord':'plus récente d\'abord');
-  }catch(e){
-    el.innerHTML = '<div style="color:var(--danger);font-size:.8rem;padding:6px 0">Erreur : '+e.message+'</div>';
-  }
-};
-
-window.sortAllByLot = async ()=>{
-  const planUrl = document.getElementById('plan-select').value;
-  const lieu = URL_TO_LIEU[planUrl]||'';
-  const sheetId = SHEET_IDS[lieu];
-  if(!sheetId){alert('Aucune sheet configurée pour ce parc.');return;}
-
-  const el = document.getElementById('sheets-result');
-  el.innerHTML = '<div style="color:var(--text2);font-size:.8rem;padding:6px 0">🔄 Chargement et tri en cours...</div>';
-
-  try{
-    const mergedItems = await fetchAndMergeItems(sheetId);
-    mergedItems.sort((a,b)=> a.lot.localeCompare(b.lot, 'fr', {sensitivity:'base'}));
-    renderSheetsTable(mergedItems, lieu, 'tri par lot A→Z');
-  }catch(e){
-    el.innerHTML = '<div style="color:var(--danger);font-size:.8rem;padding:6px 0">Erreur : '+e.message+'</div>';
-  }
-};
-
-window.deleteLot = async (id)=>{
-  const lot = lots[id];
-  if(!lot)return;
-  if(!confirm('Supprimer le lot '+lot.numero+' ? Cette action est irréversible.'))return;
-  await remove(lotRef(id));
-  closeModal('overlay-lot');
-};
-
-// ─── RENDER ───
-const LIEUX = ['Riantec','Carnac','Locmariaquer','Etel','St Hélène','Blaver','Golf'];
-const LIEU_BADGE = {
-  'Riantec':'b-blue','Carnac':'b-teal','Locmariaquer':'b-amber',
-  'Etel':'b-coral','St Hélène':'b-purple','Blaver':'b-gray','Golf':'b-pink'
-};
-
-function lieuBadge(lieu){
-  return `<span class="badge ${LIEU_BADGE[lieu]||'b-gray'}">${lieu}</span>`;
-}
-
-function todayStr(){return new Date().toISOString().split('T')[0];}
-
-function histoArr(lot){
-  if(!lot.historique)return[];
-  return Object.entries(lot.historique).map(([k,v])=>({...v,_key:k})).sort((a,b)=>a.ts-b.ts);
-}
-
-function renderStats(){
-  const arr = Object.values(lots);
-  const ops = arr.reduce((s,l)=>s+(l.historique?Object.keys(l.historique).length:0),0);
-  const lieux = new Set(arr.map(l=>l.lieuActuel)).size;
-  const now = new Date(); const mm = now.getMonth(), yy = now.getFullYear();
-  const recent = arr.flatMap(l=>histoArr(l)).filter(h=>{
-    const d=new Date(h.date); return d.getMonth()===mm&&d.getFullYear()===yy;
-  }).length;
-  document.getElementById('s-total').textContent=arr.length;
-  document.getElementById('s-ops').textContent=ops;
-  document.getElementById('s-lieux').textContent=lieux;
-  document.getElementById('s-recent').textContent=recent;
-
-  const allOps = arr.flatMap(l=>histoArr(l).map(h=>({...h,lotNum:l.numero,lotId:Object.keys(lots).find(k=>lots[k]===l)}))).sort((a,b)=>b.ts-a.ts).slice(0,10);
-  if(!allOps.length){document.getElementById('recent-list').innerHTML='<div class="empty">Aucune activité.</div>';return;}
-  document.getElementById('recent-list').innerHTML=allOps.map(h=>`
-    <li class="tl-item">
-      <div class="tl-dot dot-${h.type}"></div><div class="tl-line"></div>
-      <div><div class="tl-title">Lot ${h.lotNum} — ${h.detail}</div>
-      <div class="tl-meta">${h.date}${h.lieu?' · '+h.lieu:''}</div></div>
-    </li>`).join('');
-}
-
-function lotCode(l){
-  const initOrigine = l.origine ? l.origine.charAt(0).toUpperCase() : '?';
-  const initLieu = l.lieuActuel ? l.lieuActuel.charAt(0).toUpperCase() : '?';
-  const annee2 = String(l.annee).slice(-2);
-  const fractionMatch = l.numero.match(/-(T|C|Q)$/i);
-  const fractionSuffix = fractionMatch ? '|' + fractionMatch[1].toUpperCase() : '';
-  const numeroBase = l.numero.replace(/-(T|C|Q)$/i, '');
-  return numeroBase + initOrigine + annee2 + '|' + initLieu + fractionSuffix;
-}
-
-function lotCardHTML(id, l, isChild=false){
-  const code = lotCode(l);
-  const ops = l.historique ? Object.keys(l.historique).length : 0;
-  const indent = isChild ? 'margin-left:1.5rem;border-left:3px solid var(--border);border-radius:0 8px 8px 0;' : '';
-  return `<div class="lot-card" data-lot-id="${id}" onclick="openLot('${id}')" style="${indent}">
-    <div class="lot-header">
-      <div>
-        <div class="lot-num">🦪 <span style="font-family:monospace;font-size:${isChild?'.9':'1'}rem;font-weight:600">${code}</span></div>
-        <div class="lot-meta">${l.origine||'Origine inconnue'}${l.quantite?' · '+l.quantite+' '+(l.unite||'Kg'):''}</div>
-      </div>
-      <div style="text-align:right">
-        ${lieuBadge(l.lieuActuel)}
-        <div style="font-size:.7rem;color:var(--text2);margin-top:3px">${ops} opération(s)</div>
-      </div>
-    </div>
-  </div>`;
-}
-
-function lotMatch(l, q, fl){
-  const code = lotCode(l).toLowerCase().replace(/[|\-]/g,'');
-  const num = (l.numero||'').toLowerCase().replace(/[|\-]/g,'');
-  const orig = (l.origine||'').toLowerCase();
-  const lieu = (l.lieuActuel||'').toLowerCase();
-  const qs = q.replace(/[|\-]/g,'');
-  const mq = !qs || num.includes(qs) || code.includes(qs) || orig.includes(qs) || lieu.includes(qs);
-  const ml = !fl || l.lieuActuel === fl;
-  return mq && ml;
-}
-
-window.filterLots = ()=>{
-  const q = (document.getElementById('search').value||'').toLowerCase().trim().replace(/[|\-]/g,'');
-  const fl = document.getElementById('filter-lieu').value;
-  // On parcourt tous les groupes déjà rendus et on les cache/montre
-  const allEntries = Object.entries(lots);
-  const children = allEntries.filter(([id,l])=>l.numero.match(/-(T|C|Q)$/i));
-
-  // Pour chaque groupe dans le DOM, on vérifie si le lot parent ou ses enfants matchent
-  allEntries.forEach(([id,l])=>{
-    const isChild = l.numero.match(/-(T|C|Q)$/i);
-    if(isChild) return; // géré via le groupe parent
-    const groupEl = document.getElementById('grp-'+id);
-    const cardEl  = document.querySelector(`[data-lot-id="${id}"]`);
-    if(!cardEl) return;
-    const myKids = children.filter(([cid,cl])=>cl.numero.startsWith(l.numero+'-'));
-    const parentMatch = lotMatch(l, q, fl);
-    const kidMatches  = myKids.filter(([cid,cl])=>lotMatch(cl, q, fl));
-    const visible = parentMatch || kidMatches.length > 0;
-    cardEl.closest('.lot-group').style.display = visible ? '' : 'none';
-    // Si filtre actif, montrer les fractions qui matchent et cacher les autres
-    if(groupEl && myKids.length){
-      myKids.forEach(([cid,cl])=>{
-        const kidEl = document.querySelector(`[data-lot-id="${cid}"]`);
-        if(kidEl){
-          const show = (!q && !fl) || lotMatch(cl, q, fl);
-          kidEl.style.display = show ? '' : 'none';
-        }
-      });
-      // Auto-ouvrir si filtre actif et des enfants matchent
-      if((q||fl) && kidMatches.length){
-        groupEl.style.display='block';
-        const btn=document.getElementById('btn-grp-'+id);
-        if(btn) btn.textContent='▲ '+myKids.length+' fraction(s)';
-      }
-    }
-  });
-};
-
-function renderLots(){
-  const q = (document.getElementById('search').value||'').toLowerCase().trim();
-  const fl = document.getElementById('filter-lieu').value;
-
-  const allEntries = Object.entries(lots);
-  const parents  = allEntries.filter(([id,l])=>!l.numero.match(/-(T|C|Q)$/i));
-  const children = allEntries.filter(([id,l])=> l.numero.match(/-(T|C|Q)$/i));
-
-  // Un parent est visible si lui-même matche, OU si un de ses enfants matche
-  const filteredParents = parents.filter(([id,l])=>{
-    if(lotMatch(l, q, fl)) return true;
-    const myKids = children.filter(([cid,cl])=>cl.numero.startsWith(l.numero+'-'));
-    return myKids.some(([cid,cl])=>lotMatch(cl, q, fl));
-  }).sort((a,b)=>b[1].createdAt-a[1].createdAt);
-
-  if(!filteredParents.length){
-    const orphans = children.filter(([id,l])=>lotMatch(l, q, fl));
-    if(!orphans.length){document.getElementById('lots-list').innerHTML='<div class="empty">Aucun lot trouvé.</div>';return;}
-    document.getElementById('lots-list').innerHTML=orphans.map(([id,l])=>lotCardHTML(id,l,false)).join('');
-    return;
-  }
-
-  document.getElementById('lots-list').innerHTML=filteredParents.map(([id,l])=>{
-    const myChildren = children.filter(([cid,cl])=>cl.numero.startsWith(l.numero+'-'));
-    const hasChildren = myChildren.length > 0;
-    const groupId = 'grp-'+id;
-    // Si fractionné, masquer le lieu du parent si les enfants sont dans des lieux différents
-    const childLieux = new Set(myChildren.map(([cid,cl])=>cl.lieuActuel));
-    const showParentLieu = !hasChildren || childLieux.size <= 1;
-    let html = '';
-    if(hasChildren){
-      html += `<div class="lot-group" style="margin-bottom:10px">
-        <div class="lot-card" data-lot-id="${id}" style="margin-bottom:0;border-radius:12px 12px ${myChildren.length?'0 0':'12px 12px'}" onclick="openLot('${id}')">
-          <div class="lot-header">
-            <div>
-              <div class="lot-num">🦪 <span style="font-family:monospace;font-size:1rem;font-weight:600">${lotCode(l)}</span></div>
-              <div class="lot-meta">${l.origine||'Origine inconnue'}${l.quantite?' · '+l.quantite+' '+(l.unite||'Kg'):''}</div>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px">
-              <div style="text-align:right">
-                ${showParentLieu ? lieuBadge(l.lieuActuel) : ''}
-                <div style="font-size:.7rem;color:var(--text2);margin-top:3px">${l.historique?Object.keys(l.historique).length:0} opération(s)</div>
-              </div>
-              <button onclick="event.stopPropagation();toggleGroup('${groupId}')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:2px 6px;cursor:pointer;font-size:.75rem;color:var(--text2)" id="btn-grp-${id}">
-                ▼ ${myChildren.length} fraction(s)
-              </button>
-            </div>
-          </div>
-        </div>
-        <div id="${groupId}" style="display:none">
-          ${myChildren.map(([cid,cl])=>lotCardHTML(cid,cl,true)).join('')}
-        </div>
-      </div>`;
-    } else {
-      html += '<div class="lot-group" style="margin-bottom:10px">'+lotCardHTML(id,l,false)+'</div>';
-    }
-    return html;
-  }).join('');
-}
-
-window.toggleGroup = (groupId)=>{
-  const el = document.getElementById(groupId);
-  const btn = document.getElementById('btn-'+groupId);
-  if(!el)return;
-  const isOpen = el.style.display !== 'none';
-  el.style.display = isOpen ? 'none' : 'block';
-  const count = el.querySelectorAll('.lot-card').length;
-  btn.textContent = isOpen ? '▼ '+count+' fraction(s)' : '▲ '+count+' fraction(s)';
-};
-
-window.toggleHistoDetail = (key)=>{
-  const el = document.getElementById(key);
-  const arrowId = key.replace('histo-','histo-arrow-');
-  const arrow = document.getElementById(arrowId);
-  if(!el) return;
-  const isOpen = el.style.display !== 'none';
-  el.style.display = isOpen ? 'none' : 'block';
-  if(arrow) arrow.textContent = isOpen ? '▶' : '▼';
-};
-
-function renderHistoDetail(h){
-  const detail = h.detail || '';
-  const bracketRegex = /\[([^:]+):\s*([^\]]+)\]/g;
-  const mainText = detail.replace(bracketRegex, '').trim();
-  const blocks = [];
-  let m;
-  while((m = bracketRegex.exec(detail)) !== null){
-    blocks.push({label: m[1].trim(), value: m[2].trim()});
-  }
-
-  let html = `<div style="margin-bottom:6px"><span style="color:var(--text2)">Type :</span> <strong>${mainText}</strong></div>`;
-  html += `<div style="margin-bottom:6px"><span style="color:var(--text2)">Date :</span> <strong>${h.date}</strong></div>`;
-  if(h.lieu) html += `<div style="margin-bottom:6px"><span style="color:var(--text2)">Lieu :</span> <strong>${h.lieu}</strong></div>`;
-
-  blocks.forEach(b=>{
-    const items = b.value.split(',').map(s=>s.trim()).filter(Boolean);
-    html += `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
-      <div style="color:var(--text2);font-weight:500;margin-bottom:4px">${b.label} :</div>`;
-    if(items.length > 1){
-      html += `<ul style="margin:0;padding-left:18px">${items.map(it=>`<li>${it}</li>`).join('')}</ul>`;
-    } else {
-      html += `<div>${b.value}</div>`;
-    }
-    html += `</div>`;
-  });
-
-  return html;
-}
-
-window.openLot = (id)=>{
-  currentLotId=id;
-  const lot=lots[id];
-  if(!lot)return;
-  document.getElementById('modal-lot-title').textContent='Lot '+lot.numero;
-  const hist=histoArr(lot).reverse();
-  const OPS=[['Criblage','🔬'],['Calibrage','📏'],['Dédoublage','✂️'],['Au Tapis','🪣'],['Déplacement','📍']];
-  document.getElementById('modal-lot-body').innerHTML=`
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem;font-size:.82rem">
-      <div><span style="color:var(--text2)">Origine</span><br><strong>${lot.origine||'—'}</strong></div>
-      <div><span style="color:var(--text2)">Lieu actuel</span><br>${lieuBadge(lot.lieuActuel)}</div>
-      <div><span style="color:var(--text2)">Année</span><br><strong>${lot.annee}</strong></div>
-      <div><span style="color:var(--text2)">Quantité</span><br><strong>${lot.quantite?lot.quantite+' '+(lot.unite||'Kg'):'—'}</strong></div>
-    </div>
-    <div style="margin-bottom:1rem">
-      <div style="font-size:.82rem;font-weight:500;margin-bottom:8px;color:var(--text2)">Ajouter une opération</div>
-      <div class="op-grid">${OPS.map(([op,ic])=>`<button class="op-btn" onclick="openOp('${op}')">${ic} ${op}</button>`).join('')}</div>
-    </div>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-      <div style="font-size:.82rem;font-weight:500">Historique (${hist.length})</div>
-    </div>
-    <ul class="timeline">${hist.length?hist.map((h,i)=>`
-      <li class="tl-item" style="flex-direction:column;align-items:stretch">
-        <div style="display:flex;align-items:flex-start;gap:10px;cursor:pointer" onclick="toggleHistoDetail('histo-${id}-${i}')">
-          <div class="tl-dot dot-${h.type}" style="margin-top:5px"></div>
-          <div style="flex:1;min-width:0">
-            <div class="tl-title" style="display:flex;align-items:center;gap:6px">
-              <span id="histo-arrow-${id}-${i}" style="font-size:.65rem;color:var(--text2)">▶</span>
-              <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${h.detail}</span>
-            </div>
-            <div class="tl-meta">${h.date}${h.lieu?' · '+h.lieu:''}</div>
-          </div>
-          <button onclick="event.stopPropagation();deleteHistoEntry('${id}','${h._key}')" title="Supprimer cette entrée" style="background:none;border:none;cursor:pointer;color:var(--text2);font-size:.8rem;padding:2px 4px;border-radius:4px;flex-shrink:0" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text2)'">✕</button>
-        </div>
-        <div id="histo-${id}-${i}" style="display:none;margin-left:20px;margin-top:8px;padding:10px 12px;background:var(--bg);border-radius:8px;font-size:.8rem">
-          ${renderHistoDetail(h)}
-        </div>
-      </li>`).join(''):'<div class="empty" style="padding:1rem">Aucune opération.</div>'}</ul>
-    <div style="margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem;display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn-action" onclick="openEditLot('${id}')">✏️ Modifier le lot</button>
-      <button class="btn-action danger" onclick="deleteLot('${id}')">🗑 Supprimer ce lot</button>
-    </div>`;
-  document.getElementById('overlay-lot').classList.add('open');
-};
-
-function renderExport(){
-  const arr=Object.values(lots);
-  const lieux={};
-  arr.forEach(l=>{lieux[l.lieuActuel]=(lieux[l.lieuActuel]||0)+1;});
-  const rows=Object.entries(lieux).sort((a,b)=>b[1]-a[1]);
-  document.getElementById('repartition-list').innerHTML=rows.length?rows.map(([l,n])=>`
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:.85rem">
-      <span>${lieuBadge(l)}</span>
-      <span style="font-weight:500">${n} lot${n>1?'s':''}</span>
-    </div>`).join(''):'<div class="empty">Aucune donnée.</div>';
-}
-
-window.exportExcel = ()=>{
-  const arr=Object.entries(lots);
-  if(!arr.length){alert('Aucun lot à exporter.');return;}
-  const wb=XLSX.utils.book_new();
-  const lotsData=[['Numéro','Année','Origine','Lieu actuel','Quantité','Unité','Date entrée','Nb opérations','Notes'],
-    ...arr.map(([id,l])=>[l.numero,l.annee,l.origine,l.lieuActuel,l.quantite||'',l.unite||'Kg',l.dateEntree,l.historique?Object.keys(l.historique).length:0,l.notes||''])];
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(lotsData),'Lots');
-  const histo=[['Lot','Type','Date','Lieu','Détail'],
-    ...arr.flatMap(([id,l])=>histoArr(l).map(h=>[l.numero,h.type,h.date,h.lieu||'',h.detail]))];
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(histo),'Historique');
-  XLSX.writeFile(wb,'lots_huitres_'+todayStr()+'.xlsx');
-};
-
-function renderAll(){
-  renderStats();
-  renderLots();
-  renderExport();
-}
-
-// ─── TABS ───
-const PARC_URLS = {
-  'Locmariaquer': 'https://docs.google.com/spreadsheets/d/1fZSf0x9VgglfhACek6wTpMHq7GrNu8W9JYcrwLTVLzs/htmlview?usp=sharing',
-  'Carnac': 'https://docs.google.com/spreadsheets/d/12GTFWaA_xT5IvdXyhCiQAxjPiacOssCvo7jhAbsDlxs/htmlview?usp=sharing',
-};
-const URL_TO_LIEU = {
-  'https://docs.google.com/spreadsheets/d/1fZSf0x9VgglfhACek6wTpMHq7GrNu8W9JYcrwLTVLzs/htmlview?usp=sharing': 'Locmariaquer',
-  'https://docs.google.com/spreadsheets/d/12GTFWaA_xT5IvdXyhCiQAxjPiacOssCvo7jhAbsDlxs/htmlview?usp=sharing': 'Carnac',
-};
-
-window.changerPlan = ()=>{
-  const url = document.getElementById('plan-select').value;
-  document.getElementById('plan-frame').src = url;
-  updatePlanLotsList(url);
-
-};
-
-function updatePlanLotsList(url){
-  const lieu = URL_TO_LIEU[url]||'';
-  // Alimenter le select de recherche par lot
-  const sel = document.getElementById('plan-lot-search');
-  if(!sel) return;
-  const lotsIci = Object.entries(lots).filter(([id,l])=>!lieu||l.lieuActuel===lieu);
-  const displaySel = document.getElementById('plan-lot-display');
-  if(displaySel){
-    displaySel.innerHTML = lotsIci.length
-      ? '<option value="">— Lots sur ce parc ('+lotsIci.length+') —</option>'
-        +lotsIci.map(([id,l])=>`<option value="${l.numero}">${lotCode(l)} · ${l.origine||''}</option>`).join('')
-      : '<option value="">Aucun lot sur ce parc</option>';
-  }
-  document.getElementById('sheets-result').innerHTML='';
-}
-
-function renderPlanLots(){
-  const url = document.getElementById('plan-select')?.value||'';
-  updatePlanLotsList(url);
-}
-
 window.showTab = (name)=>{
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   const names=['dashboard','nouveau','lots','plan','export','admin'];
   document.querySelectorAll('.tab')[names.indexOf(name)]?.classList.add('active');
   document.getElementById('tab-'+name)?.classList.add('active');
-  if(name==='plan') renderPlanLots();
+  if(name==='plan') initPlanDesParcs();
 };
 
 
@@ -1633,6 +1144,768 @@ document.querySelectorAll('.overlay').forEach(o=>{
 
 // Enter key on login
 document.getElementById('login-password').addEventListener('keydown',e=>{if(e.key==='Enter')window.doLogin();});
+</script>
+
+<script>
+// ═══ PLAN DES PARCS ═══
+var PLAN_SK = 'plan_parc_v4';
+var CELL = 20;
+
+// ── ONGLETS ──
+// ── STRUCTURE : parcs[{id, name, zones:[{id,name,ncols,nrows,ppp,blocks}], activeZone}] ──
+var parcs = [];
+var activeParc = 0;
+var nextId = 1;
+
+function newZone(name){ return {id:nextId++, name:name, ncols:100, nrows:30, ppp:2, blocks:[]}; }
+function newParc(name){ return {id:nextId++, name:name, zones:[newZone('Zone 1')], activeZone:0}; }
+function curParc(){ return parcs[activeParc]; }
+function curTab(){ var p=curParc(); return p.zones[p.activeZone]; }
+
+var scale = 1;
+var highlighted = [];
+var editing = null;
+var dragSel = new Set();
+var dragActive = false, dragR0 = 0, dragC0 = 0;
+var stateHist = [], histIdx = -1;
+var COLORS = ['#FAC775','#85B7EB','#F0997B','#97C459','#ED93B1','#AFA9EC','#B4B2A9','#5DCAA5','#F87171','#34D399'];
+var selColor = COLORS[0];
+var selDir = 'right';
+var selMode = false;
+var zoneSel = {r1:0,c1:0,r2:0,c2:0,active:false};
+var zoneSelDrag = false, zoneR0=0, zoneC0=0;
+var ctxTarget = null;
+
+// ── UTILS ──
+function today(){ var d=new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function pad(n){ return n<10?'0'+n:n; }
+function fmt(iso){ if(!iso)return ''; var p=iso.split('-'); return p[2]+'/'+p[1]+'/'+p[0].slice(2); }
+function gram(v){ if(!v)return ''; v=String(v).trim(); return /^\d+([.,]\d+)?$/.test(v)?v+'g':v; }
+function esc(s){ var d=document.createElement('div');d.textContent=s;return d.innerHTML; }
+function toast(m){ var t=document.getElementById('plan-toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},1800); }
+function darken(hex){ var r=Math.max(0,parseInt(hex.slice(1,3),16)-80),g=Math.max(0,parseInt(hex.slice(3,5),16)-80),b=Math.max(0,parseInt(hex.slice(5,7),16)-80); return 'rgb('+r+','+g+','+b+')'; }
+
+// ── HISTORIQUE ──
+function snap(){ return JSON.stringify({parcs:parcs,activeParc:activeParc,nextId:nextId}); }
+function pushHist(){
+  var s=snap();
+  if(histIdx>=0&&stateHist[histIdx]===s)return;
+  stateHist=stateHist.slice(0,histIdx+1);
+  stateHist.push(s);
+  if(stateHist.length>60)stateHist.shift();
+  histIdx=stateHist.length-1;
+  updHistBtns();
+}
+function applySnap(s){
+  var d=JSON.parse(s);
+  parcs=d.parcs;activeParc=d.activeParc;nextId=d.nextId;
+  syncInputs();save(true);renderNav();render();
+}
+function undo(){ if(histIdx<=0)return;histIdx--;applySnap(stateHist[histIdx]);updHistBtns();toast('Annule'); }
+function redo(){ if(histIdx>=stateHist.length-1)return;histIdx++;applySnap(stateHist[histIdx]);updHistBtns();toast('Retabli'); }
+function updHistBtns(){ document.getElementById('undoBtn').disabled=histIdx<=0;document.getElementById('redoBtn').disabled=histIdx>=stateHist.length-1; }
+
+// ── PERSISTANCE ──
+function save(skip){ localStorage.setItem(PLAN_SK,snap());if(!skip)pushHist(); }
+function load(){
+  try{
+    var d=JSON.parse(localStorage.getItem(PLAN_SK)||'{}');
+    if(d.parcs&&d.parcs.length){
+      parcs=d.parcs;activeParc=d.activeParc||0;nextId=d.nextId||100;
+    } else {
+      parcs=[newParc('Parc 1')];activeParc=0;
+    }
+  }catch(e){ parcs=[newParc('Parc 1')];activeParc=0; }
+  syncInputs();pushHist();
+}
+function syncInputs(){
+  var t=curTab();
+  document.getElementById('inp-cols').value=t.ncols;
+  document.getElementById('inp-rows').value=t.nrows;
+  document.getElementById('inp-ppp').value=t.ppp;
+}
+
+// ── SETTINGS ──
+function applySettings(){
+  var t=curTab();
+  t.ncols=Math.min(500,Math.max(10,parseInt(document.getElementById('inp-cols').value)||100));
+  t.nrows=Math.min(300,Math.max(5,parseInt(document.getElementById('inp-rows').value)||30));
+  t.ppp=Math.max(0.1,parseFloat(document.getElementById('inp-ppp').value)||2);
+  save();render();
+}
+
+// ── NAVIGATION DEUX NIVEAUX ──
+function renderNav(){
+  // Parcs (barre sombre)
+  var p=document.getElementById('navParcs');
+  p.innerHTML=parcs.map(function(parc,i){
+    return '<button class="parc-tab'+(i===activeParc?' active':'')+'" onclick="switchParc('+i+')" ondblclick="renameParc('+i+')">'+
+      esc(parc.name)+
+      (parcs.length>1?'<span class="tab-close" onclick="event.stopPropagation();delParc('+i+')" title="Supprimer">x</span>':'')+
+    '</button>';
+  }).join('')+
+  '<button class="parc-add" onclick="addParc()" title="Nouveau parc">+</button>';
+  // Zones (barre claire)
+  var parc=curParc();
+  var z=document.getElementById('navZones');
+  z.innerHTML='<span class="nav-label">'+esc(parc.name)+' :</span>'+
+  parc.zones.map(function(zone,i){
+    return '<button class="zone-tab'+(i===parc.activeZone?' active':'')+'" onclick="switchZone('+i+')" ondblclick="renameZone('+i+')">'+
+      esc(zone.name)+
+      (parc.zones.length>1?'<span class="tab-close" onclick="event.stopPropagation();delZone('+i+')" title="Supprimer">x</span>':'')+
+    '</button>';
+  }).join('')+
+  '<button class="zone-add" onclick="addZone()" title="Nouvelle zone">+</button>';
+}
+function renderTabs(){ renderNav(); }
+
+function switchParc(i){ activeParc=i;highlighted=[];syncInputs();renderNav();render(); }
+function addParc(){
+  var name=prompt('Nom du parc :','Nouveau parc');
+  if(!name||!name.trim())return;
+  parcs.push(newParc(name.trim()));
+  activeParc=parcs.length-1;
+  syncInputs();save();renderNav();render();
+}
+function delParc(i){
+  if(parcs.length===1){toast('Impossible de supprimer le seul parc');return;}
+  if(!confirm('Supprimer "'+parcs[i].name+'" et toutes ses zones ?'))return;
+  parcs.splice(i,1);
+  if(activeParc>=parcs.length)activeParc=parcs.length-1;
+  syncInputs();save();renderNav();render();
+}
+function renameParc(i){
+  var name=prompt('Nouveau nom du parc :',parcs[i].name);
+  if(name&&name.trim()){parcs[i].name=name.trim();save();renderNav();}
+}
+
+function switchZone(i){ curParc().activeZone=i;highlighted=[];syncInputs();renderNav();render(); }
+function addZone(){
+  var name=prompt('Nom de la zone :','Nouvelle zone');
+  if(!name||!name.trim())return;
+  curParc().zones.push(newZone(name.trim()));
+  curParc().activeZone=curParc().zones.length-1;
+  syncInputs();save();renderNav();render();
+}
+function delZone(i){
+  var p=curParc();
+  if(p.zones.length===1){toast('Impossible de supprimer la seule zone');return;}
+  if(!confirm('Supprimer "'+p.zones[i].name+'" ?'))return;
+  p.zones.splice(i,1);
+  if(p.activeZone>=p.zones.length)p.activeZone=p.zones.length-1;
+  syncInputs();save();renderNav();render();
+}
+function renameZone(i){
+  var p=curParc();
+  var name=prompt('Nouveau nom de la zone :',p.zones[i].name);
+  if(name&&name.trim()){p.zones[i].name=name.trim();save();renderNav();}
+}
+
+
+// ── INSERT / DELETE LIGNES & COLONNES ──
+function insertRow(idx, before){
+  var t=curTab();
+  var pos=before?idx:idx+1;
+  t.nrows++;
+  t.blocks.forEach(function(b){
+    if(b.dir==='down'||b.dir==='up'){
+      // blocs verticaux: décaler si nécessaire
+      if(b.row>=pos) b.row++;
+      else if(b.dir==='down'&&b.row<pos&&b.row+bspan(b)>pos){/* span s'étend, on laisse */}
+    } else {
+      if(b.row>=pos) b.row++;
+    }
+  });
+  document.getElementById('inp-rows').value=t.nrows;
+  save();render();toast('Rangée insérée');
+}
+
+function deleteRow(idx){
+  var t=curTab();
+  if(t.nrows<=1){toast('Impossible de supprimer la dernière rangée');return;}
+  t.nrows--;
+  t.blocks=t.blocks.filter(function(b){return b.row!==idx;});
+  t.blocks.forEach(function(b){if(b.row>idx)b.row--;});
+  document.getElementById('inp-rows').value=t.nrows;
+  save();render();toast('Rangée supprimée');
+}
+
+function insertCol(idx, before){
+  var t=curTab();
+  var pos=before?idx:idx+1;
+  t.ncols++;
+  t.blocks.forEach(function(b){
+    if(b.col>=pos) b.col++;
+  });
+  document.getElementById('inp-cols').value=t.ncols;
+  save();render();toast('Colonne insérée');
+}
+
+function deleteCol(idx){
+  var t=curTab();
+  if(t.ncols<=1){toast('Impossible de supprimer la dernière colonne');return;}
+  t.ncols--;
+  t.blocks=t.blocks.filter(function(b){return b.col!==idx;});
+  t.blocks.forEach(function(b){if(b.col>idx)b.col--;});
+  document.getElementById('inp-cols').value=t.ncols;
+  save();render();toast('Colonne supprimée');
+}
+
+// ── MENU CONTEXTUEL ──
+function openCtxMenu(e, type, idx){
+  e.preventDefault();
+  ctxTarget={type:type,idx:idx};
+  var menu=document.getElementById('ctxMenu');
+  var label=type==='row'?'Rangée L'+(idx+1):'Colonne '+(idx+1);
+  var unit=type==='row'?'rangée':'colonne';
+  document.getElementById('ctxLabel').textContent=label;
+  document.getElementById('ctx-ins-before').textContent='Insérer une '+unit+' avant';
+  document.getElementById('ctx-ins-after').textContent='Insérer une '+unit+' après';
+  document.getElementById('ctx-delete').textContent='Supprimer cette '+unit;
+  var maxX=window.innerWidth-200, maxY=window.innerHeight-150;
+  menu.style.left=Math.min(e.clientX,maxX)+'px';
+  menu.style.top=Math.min(e.clientY,maxY)+'px';
+  menu.classList.add('open');
+}
+
+function ctxAction(action){
+  if(!ctxTarget)return;
+  document.getElementById('ctxMenu').classList.remove('open');
+  var type=ctxTarget.type, idx=ctxTarget.idx;
+  if(action==='ins-before'){ if(type==='row')insertRow(idx,true); else insertCol(idx,true); }
+  else if(action==='ins-after'){ if(type==='row')insertRow(idx,false); else insertCol(idx,false); }
+  else if(action==='delete'){ if(type==='row')deleteRow(idx); else deleteCol(idx); }
+  ctxTarget=null;
+}
+
+document.addEventListener('click',function(e){
+  if(!e.target.closest('#ctxMenu'))document.getElementById('ctxMenu').classList.remove('open');
+});
+
+// ── VIDE TOGGLE ──
+function toggleVide(){
+  var isVide = document.getElementById('l-vide').checked;
+  document.getElementById('lot-detail-fields').style.display = isVide ? 'none' : 'block';
+  if(isVide){
+    // Couleur rouge automatique
+    selColor = '#F87171';
+    buildSw('lot-swatches','pickLotColor');
+  }
+}
+
+// ── MODE SELECTION DE ZONE ──
+var selMode = false;
+var zoneSel = {r1:0,c1:0,r2:0,c2:0,active:false};
+var zoneSelDrag = false, zoneR0=0, zoneC0=0;
+
+function toggleSelMode(){
+  selMode = !selMode;
+  var btn = document.getElementById('selModeBtn');
+  btn.className = selMode ? 'btn btn-primary' : 'btn';
+  document.getElementById('selInfo').style.display = selMode ? 'inline-block' : 'none';
+  if(!selMode){
+    zoneSel.active = false;
+    document.getElementById('selInfo').textContent = '';
+    document.getElementById('pr-sel-field').style.display = 'none';
+    renderZoneSel();
+  }
+  document.getElementById('gridWrap').style.cursor = selMode ? 'cell' : 'crosshair';
+}
+
+function renderZoneSel(){
+  document.querySelectorAll('td.zone-sel').forEach(function(el){el.classList.remove('zone-sel');});
+  if(!zoneSel.active) return;
+  var r1=Math.min(zoneSel.r1,zoneSel.r2), r2=Math.max(zoneSel.r1,zoneSel.r2);
+  var c1=Math.min(zoneSel.c1,zoneSel.c2), c2=Math.max(zoneSel.c1,zoneSel.c2);
+  for(var r=r1;r<=r2;r++) for(var c=c1;c<=c2;c++){
+    var el=document.getElementById('c'+r+'_'+c);
+    if(el) el.classList.add('zone-sel');
+  }
+  var nb = (r2-r1+1)*(c2-c1+1);
+  document.getElementById('selInfo').textContent = (r2-r1+1)+' rangées × '+(c2-c1+1)+' colonnes ('+nb+' cases)';
+  document.getElementById('pr-sel-field').style.display = 'block';
+}
+
+// ── DROPDOWNS ──
+function toggleDD(id){
+  var menu=document.getElementById(id+'-menu');
+  var isOpen=menu.classList.contains('open');
+  closeDD();
+  if(!isOpen)menu.classList.add('open');
+}
+function closeDD(){
+  document.querySelectorAll('.dropdown-menu.open').forEach(function(m){m.classList.remove('open');});
+}
+document.addEventListener('click',function(e){
+  if(!e.target.closest('.dropdown'))closeDD();
+});
+
+// ── ZOOM ──
+function doZoom(d){
+  if(d===-99)scale=1; else scale=Math.max(0.2,Math.min(4,Math.round((scale+d)*10)/10));
+  // On applique le zoom sur la table directement (pas sur gridInner)
+  // pour que les sticky headers restent fixes
+  document.getElementById('grid').style.zoom=scale;
+  document.getElementById('zoom-label').textContent=Math.round(scale*100)+'%';
+}
+
+// ── BLOCS ──
+function bpx(b){ return b.type==='libre'? Math.max(CELL,(b.nbcases||1)*CELL) : Math.max(CELL,Math.round((b.poches||1)/curTab().ppp)); }
+function bspan(b){ return Math.max(1,Math.min(500,Math.ceil(bpx(b)/CELL))); }
+function bcells(b){
+  var span=bspan(b),cells=[];
+  for(var i=0;i<span;i++){
+    var r=b.row,c=b.col;
+    if(b.dir==='right')c+=i; else if(b.dir==='left')c-=i;
+    else if(b.dir==='down')r+=i; else if(b.dir==='up')r-=i;
+    cells.push([r,c]);
+  }
+  return cells;
+}
+function occ(){
+  var m={};
+  curTab().blocks.forEach(function(b,bi){ bcells(b).forEach(function(p){ m[p[0]+'_'+p[1]]=bi; }); });
+  return m;
+}
+function blabel(b){
+  var p=[b.poches+'p'];
+  if(b.gram)p.push(gram(b.gram));
+  if(b.lot)p.push(b.lot);
+  if(b.poids)p.push(b.poids+'kg');
+  if(b.date)p.push(fmt(b.date));
+  return p.join(' ');
+}
+
+// ── RENDER ──
+function render(){
+  var t=curTab();
+  var _ncols=t.ncols, _nrows=t.nrows;
+  var map=occ();
+  var html='<colgroup><col class="rowhead-col">';
+  for(var ci=0;ci<_ncols;ci++)html+='<col>';
+  html+='</colgroup>';
+  html+='<thead><tr><th class="corner"></th>';
+  for(var c=0;c<_ncols;c++)html+='<th class="ch" oncontextmenu="openCtxMenu(event,\'col\','+c+')">'+(c+1)+'</th>';
+  html+='</tr></thead><tbody>';
+  for(var r=0;r<_nrows;r++){
+    html+='<tr><th class="rh" oncontextmenu="openCtxMenu(event,\'row\','+r+')">L'+(r+1)+'</th>';
+    var c2=0;
+    while(c2<_ncols){
+      var bi=map[r+'_'+c2];
+      if(bi===undefined){
+        var ds=dragSel.has(r+'_'+c2);
+        var zs=zoneSel.active&&r>=Math.min(zoneSel.r1,zoneSel.r2)&&r<=Math.max(zoneSel.r1,zoneSel.r2)&&c2>=Math.min(zoneSel.c1,zoneSel.c2)&&c2<=Math.max(zoneSel.c1,zoneSel.c2);
+        html+='<td class="cell'+(ds?' drag-sel':zs?' zone-sel':'')+'" id="c'+r+'_'+c2+'" data-r="'+r+'" data-c="'+c2+'"></td>';
+        c2++;
+      } else {
+        var b=t.blocks[bi];
+        var cells=bcells(b);
+        var isVert=b.dir==='up'||b.dir==='down';
+        var isFirst=!cells.some(function(p){return map[p[0]+'_'+p[1]]===bi&&(p[0]<r||(p[0]===r&&p[1]<c2));});
+        if(!isFirst){c2++;continue;}
+        var isHL=highlighted.indexOf(bi)!==-1;
+        var label=b.type==='libre'?(b.text||''):blabel(b);
+        var fs=b.fsize||'10'; var fw=b.fweight||'700'; var ta=b.align||'center';
+        var bw=b.bwidth||'2'; var bs2=b.bstyle||'double'; var bc=b.bcolor||'#1a202c';
+        var style='background:'+b.color+'55;border:'+bw+'px '+bs2+' '+bc+';color:'+darken(b.color)+';font-size:'+fs+'px;font-weight:'+fw+';text-align:'+ta+';overflow:hidden;white-space:nowrap;text-overflow:ellipsis';
+        if(isHL)style+=';outline:2px solid #e63946;outline-offset:-2px;z-index:2';
+        var visibleCells=cells.filter(function(p){return p[0]===r;});
+        var span=isVert?1:visibleCells.length;
+        var w=isVert?CELL:span*CELL;
+        var h=isVert?cells.length*CELL:CELL;
+        style+=';width:'+w+'px;max-width:'+w+'px;height:'+h+'px;max-height:'+h+'px';
+        var inner=isVert?'<div style="writing-mode:vertical-rl;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden">'+esc(label)+'</div>':esc(label);
+        var spanAttr=isVert?'rowspan="'+cells.length+'"':'colspan="'+span+'"';
+        html+='<td class="blockcell'+(isHL?' highlighted':'')+'" '+spanAttr+' style="'+style+'" onclick="clickBlock('+bi+')" title="'+esc(label)+'">'+inner+'</td>';
+        if(isVert)c2++; else c2+=span;
+      }
+    }
+    html+='</tr>';
+  }
+  html+='</tbody>';
+  document.getElementById('grid').innerHTML=html;
+  updHistBtns();
+}
+
+// ── INTERACTIONS ──
+function clickBlock(bi){ openEditBlock(bi); }
+
+function initDrag(){
+  var grid=document.getElementById('grid');
+
+  grid.addEventListener('mousedown',function(e){
+    if(e.button!==0)return;
+    var td=e.target.closest('td[data-r]');
+    if(!td)return;
+    e.preventDefault();
+    if(selMode){
+      // MODE SELECTION DE ZONE
+      zoneSelDrag=true;
+      zoneR0=+td.dataset.r; zoneC0=+td.dataset.c;
+      zoneSel={r1:zoneR0,c1:zoneC0,r2:zoneR0,c2:zoneC0,active:true};
+      renderZoneSel();
+    } else {
+      // MODE NORMAL
+      dragActive=true;
+      dragR0=+td.dataset.r; dragC0=+td.dataset.c;
+      dragSel.clear(); dragSel.add(dragR0+'_'+dragC0);
+      renderDrag();
+    }
+  });
+
+  document.addEventListener('mousemove',function(e){
+    if(selMode && zoneSelDrag){
+      var td=document.elementFromPoint(e.clientX,e.clientY);
+      if(!td||!td.dataset||!td.dataset.r)return;
+      zoneSel.r2=+td.dataset.r; zoneSel.c2=+td.dataset.c;
+      renderZoneSel();
+      return;
+    }
+    if(!dragActive)return;
+    var td=document.elementFromPoint(e.clientX,e.clientY);
+    if(!td||!td.dataset||!td.dataset.r)return;
+    var r=+td.dataset.r,c=+td.dataset.c;
+    var r1=Math.min(dragR0,r),r2=Math.max(dragR0,r),c1=Math.min(dragC0,c),c2=Math.max(dragC0,c);
+    dragSel.clear();
+    for(var rr=r1;rr<=r2;rr++)for(var cc=c1;cc<=c2;cc++)dragSel.add(rr+'_'+cc);
+    renderDrag();
+  });
+
+  document.addEventListener('mouseup',function(){
+    if(selMode && zoneSelDrag){
+      zoneSelDrag=false;
+      renderZoneSel();
+      return;
+    }
+    if(!dragActive)return;
+    dragActive=false;
+    if(dragSel.size===0)return;
+    var sel=new Set(dragSel);
+    dragSel.clear();
+    renderDrag();
+    if(sel.size===1){
+      var k=Array.from(sel)[0].split('_');
+      openNewLot(+k[0],+k[1]);
+    } else {
+      var minR=999,minC=999;
+      sel.forEach(function(k){var p=k.split('_');minR=Math.min(minR,+p[0]);minC=Math.min(minC,+p[1]);});
+      openNewLibre(minR,minC,sel.size);
+    }
+  });
+
+  // zoom molette
+  document.getElementById('gridWrap').addEventListener('wheel',function(e){
+    if(e.ctrlKey||e.metaKey){e.preventDefault();doZoom(e.deltaY<0?0.15:-0.15);}
+  },{passive:false});
+
+  // keyboard
+  document.addEventListener('keydown',function(e){
+    if((e.ctrlKey||e.metaKey)&&e.key==='z'){e.preventDefault();undo();}
+    if((e.ctrlKey||e.metaKey)&&(e.key==='y'||(e.shiftKey&&e.key==='Z'))){e.preventDefault();redo();}
+    if(e.key==='Escape'&&selMode){toggleSelMode();}
+  });
+}
+
+function renderDrag(){
+  document.querySelectorAll('td.drag-sel').forEach(function(el){el.classList.remove('drag-sel');});
+  dragSel.forEach(function(k){var el=document.getElementById('c'+k);if(el)el.classList.add('drag-sel');});
+}
+
+// ── SWATCHES ──
+function buildSw(id,onPick){
+  document.getElementById(id).innerHTML=COLORS.map(function(c){
+    return '<div class="swatch'+(c===selColor?' sel':'')+'" style="background:'+c+'" onclick="'+onPick+'(\''+c+'\')"></div>';
+  }).join('');
+}
+function pickLotColor(c){selColor=c;buildSw('lot-swatches','pickLotColor');}
+function pickLibreColor(c){selColor=c;buildSw('libre-swatches','pickLibreColor');}
+
+// ── DIR BUTTONS ──
+function setDir(d){
+  selDir=d;
+  ['up','down','left','right'].forEach(function(x){
+    var b=document.getElementById('d-'+x);
+    if(b)b.className='btn'+(x===d?' btn-primary':'');
+  });
+}
+
+// ── OPEN MODALS ──
+function openNewLot(r,c){
+  editing={isNew:true,row:r,col:c};
+  document.getElementById('lot-title').textContent='Nouveau lot';
+  document.getElementById('l-poches').value=10;
+  document.getElementById('l-gram').value='';
+  document.getElementById('l-lot').value='';
+  document.getElementById('l-poids').value='';
+  document.getElementById('l-date').value=today();
+  document.getElementById('l-notes').value='';
+  document.getElementById('l-vide').checked=false;
+  document.getElementById('lot-detail-fields').style.display='block';
+  document.getElementById('l-fsize').value='10';
+  document.getElementById('l-fweight').value='700';
+  document.getElementById('l-align').value='center';
+  document.getElementById('l-bwidth').value='2';
+  document.getElementById('l-bstyle').value='double';
+  document.getElementById('l-bcolor').value='#1a202c';
+  selColor=COLORS[Math.floor(Math.random()*COLORS.length)];
+  selDir='right';
+  buildSw('lot-swatches','pickLotColor');
+  setDir('right');
+  document.getElementById('del-lot').style.display='none';
+  document.getElementById('modalLot').classList.add('open');
+}
+
+function openNewLibre(r,c,nb){
+  editing={isNew:true,row:r,col:c,nbcases:nb};
+  document.getElementById('libre-info').textContent=nb+' case'+(nb>1?'s':'')+' sélectionnée'+(nb>1?'s':'')+' · départ L'+(r+1)+' col '+(c+1);
+  document.getElementById('libre-info').style.display='block';
+  document.getElementById('fr-text').value='';
+  document.getElementById('fr-fsize').value='10';
+  document.getElementById('fr-fweight').value='700';
+  document.getElementById('fr-align').value='center';
+  document.getElementById('fr-bwidth').value='2';
+  document.getElementById('fr-bstyle').value='double';
+  document.getElementById('fr-bcolor').value='#1a202c';
+  selColor=COLORS[Math.floor(Math.random()*COLORS.length)];
+  buildSw('libre-swatches','pickLibreColor');
+  document.getElementById('del-libre').style.display='none';
+  document.getElementById('modalLibre').classList.add('open');
+}
+
+function openEditBlock(bi){
+  var b=curTab().blocks[bi];
+  editing={isNew:false,bi:bi};
+  selColor=b.color; selDir=b.dir||'right';
+  if(b.type==='libre'){
+    document.getElementById('libre-info').style.display='none';
+    document.getElementById('fr-text').value=b.text||'';
+    document.getElementById('fr-fsize').value=b.fsize||'10';
+    document.getElementById('fr-fweight').value=b.fweight||'700';
+    document.getElementById('fr-align').value=b.align||'center';
+    document.getElementById('fr-bwidth').value=b.bwidth||'2';
+    document.getElementById('fr-bstyle').value=b.bstyle||'double';
+    document.getElementById('fr-bcolor').value=b.bcolor||'#1a202c';
+    buildSw('libre-swatches','pickLibreColor');
+    document.getElementById('del-libre').style.display='inline-block';
+    document.getElementById('modalLibre').classList.add('open');
+  } else {
+    document.getElementById('lot-title').textContent='Modifier le lot';
+    document.getElementById('l-poches').value=b.poches;
+    document.getElementById('l-gram').value=b.gram||'';
+    document.getElementById('l-lot').value=b.lot||'';
+    document.getElementById('l-poids').value=b.poids||'';
+    document.getElementById('l-date').value=b.date||'';
+    document.getElementById('l-notes').value=b.notes||'';
+    var isVide=!!b.vide;
+    document.getElementById('l-vide').checked=isVide;
+    document.getElementById('lot-detail-fields').style.display=isVide?'none':'block';
+    document.getElementById('l-fsize').value=b.fsize||'10';
+    document.getElementById('l-fweight').value=b.fweight||'700';
+    document.getElementById('l-align').value=b.align||'center';
+    document.getElementById('l-bwidth').value=b.bwidth||'2';
+    document.getElementById('l-bstyle').value=b.bstyle||'double';
+    document.getElementById('l-bcolor').value=b.bcolor||'#1a202c';
+    buildSw('lot-swatches','pickLotColor');
+    setDir(b.dir||'right');
+    document.getElementById('del-lot').style.display='inline-block';
+    document.getElementById('modalLot').classList.add('open');
+  }
+}
+
+function closeModal(id){ document.getElementById(id).classList.remove('open'); editing=null; }
+
+// ── SAVE BLOCS ──
+function saveLot(){
+  if(!editing)return;
+  var isVide=document.getElementById('l-vide').checked;
+  var data={
+    type:'lot', row:editing.row!==undefined?editing.row:blocks[editing.bi].row,
+    col:editing.col!==undefined?editing.col:blocks[editing.bi].col,
+    dir:selDir, color:selColor,
+    vide:isVide,
+    poches:parseInt(document.getElementById('l-poches').value)||1,
+    gram:isVide?'v':''+document.getElementById('l-gram').value.trim(),
+    lot:isVide?'':document.getElementById('l-lot').value.trim(),
+    poids:isVide?'':document.getElementById('l-poids').value,
+    date:isVide?'':document.getElementById('l-date').value,
+    notes:isVide?'':document.getElementById('l-notes').value.trim(),
+    fsize:document.getElementById('l-fsize').value,
+    fweight:document.getElementById('l-fweight').value,
+    align:document.getElementById('l-align').value,
+    bwidth:document.getElementById('l-bwidth').value,
+    bstyle:document.getElementById('l-bstyle').value,
+    bcolor:document.getElementById('l-bcolor').value
+  };
+  if(editing.isNew)curTab().blocks.push(data); else curTab().blocks[editing.bi]=data;
+  closeModal('modalLot');save();render();toast(isVide?'Emplacement vide enregistré':'Bloc enregistré');
+}
+
+function saveLibre(){
+  if(!editing)return;
+  var row=editing.row!==undefined?editing.row:blocks[editing.bi].row;
+  var col=editing.col!==undefined?editing.col:blocks[editing.bi].col;
+  var nb=editing.nbcases||blocks[editing.bi].nbcases||1;
+  var data={
+    type:'libre', row:row, col:col, dir:'right', color:selColor, nbcases:nb,
+    text:document.getElementById('fr-text').value.trim(),
+    fsize:document.getElementById('fr-fsize').value,
+    fweight:document.getElementById('fr-fweight').value,
+    align:document.getElementById('fr-align').value,
+    bwidth:document.getElementById('fr-bwidth').value,
+    bstyle:document.getElementById('fr-bstyle').value,
+    bcolor:document.getElementById('fr-bcolor').value
+  };
+  if(editing.isNew)curTab().blocks.push(data); else curTab().blocks[editing.bi]=data;
+  closeModal('modalLibre');save();render();toast('Zone enregistrée');
+}
+
+function deleteLot(){ if(!editing||editing.isNew)return;curTab().blocks.splice(editing.bi,1);closeModal('modalLot');save();render();toast('Bloc supprimé'); }
+function deleteLibre(){ if(!editing||editing.isNew)return;curTab().blocks.splice(editing.bi,1);closeModal('modalLibre');save();render();toast('Zone supprimée'); }
+
+// ── RECHERCHE / CALCULS ──
+function doSearch(){
+  var val=document.getElementById('inp-search').value.trim();
+  if(!val){clearSearch();return;}
+  highlighted=[];
+  curTab().blocks.forEach(function(b,bi){if(b.type==='lot'&&b.lot===val)highlighted.push(bi);});
+  var tot=highlighted.reduce(function(s,bi){return s+(parseInt(curTab().blocks[bi].poches)||0);},0);
+  showRes('<strong>'+esc(val)+'</strong> — '+highlighted.length+' bloc'+(highlighted.length>1?'s':'')+' — <strong>'+tot+' poches</strong>');
+  render();
+}
+
+function clearSearch(){
+  highlighted=[];document.getElementById('inp-search').value='';
+  document.getElementById('results').classList.remove('open');
+  render();
+}
+
+function calcVides(){
+  var idx=[];
+  curTab().blocks.forEach(function(b,bi){
+    var fields=[b.lot,b.gram,b.text];
+    if(fields.some(function(f){if(!f)return false;var v=String(f).trim().toLowerCase();return v==='v'||/^\d*\s*v$/.test(v);}))idx.push(bi);
+  });
+  if(!idx.length){showRes('Aucun emplacement vide détecté.');return;}
+  var tot=idx.reduce(function(s,bi){return s+(parseInt(curTab().blocks[bi].poches)||parseInt(curTab().blocks[bi].nbcases)||0);},0);
+  highlighted=idx;render();
+  var rows=idx.map(function(bi){return '<tr onclick="highlighted=['+bi+'];render()"><td>L'+(curTab().blocks[bi].row+1)+'</td><td>'+(curTab().blocks[bi].poches||curTab().blocks[bi].nbcases||0)+'p</td></tr>';}).join('');
+  showRes('<div style="display:flex;align-items:center;justify-content:space-between"><strong>'+idx.length+' emplacement'+(idx.length>1?'s':'')+' vide — '+tot+' poches</strong><button class="btn" onclick="highlighted='+JSON.stringify(idx)+';render()">Tout sélectionner</button></div><table><tr><th>Rangée</th><th>Poches</th></tr>'+rows+'</table>');
+}
+
+function calcRef(ref){
+  var idx=[];
+  curTab().blocks.forEach(function(b,bi){if(b.type==='lot'&&b.gram&&String(b.gram).trim().toUpperCase()===ref.toUpperCase())idx.push(bi);});
+  if(!idx.length){showRes('Aucune case '+esc(ref)+' trouvée.');return;}
+  var totP=0,totKg=0;
+  var rows=idx.map(function(bi){
+    var b=curTab().blocks[bi];var p=parseInt(b.poches)||0;var kg=parseFloat(b.poids)||0;var l=kg?+(p*kg).toFixed(1):0;
+    totP+=p;totKg+=l;
+    return '<tr onclick="highlighted=['+bi+'];render()"><td>'+esc(b.lot||'—')+'</td><td>'+p+'p</td><td>'+(kg?kg+'kg':'—')+'</td><td>'+(l?l+'kg':'—')+'</td></tr>';
+  }).join('');
+  highlighted=idx;render();
+  showRes('<div style="display:flex;align-items:center;justify-content:space-between"><strong>'+esc(ref)+' — '+totP+' poches — '+totKg.toFixed(1)+' kg</strong><button class="btn" onclick="highlighted='+JSON.stringify(idx)+';render()">Tout sélectionner</button></div><table><tr><th>Lot</th><th>Poches</th><th>Poids/p</th><th>Total</th></tr>'+rows+'</table>');
+}
+
+function showRes(html){
+  document.getElementById('res-content').innerHTML=html;
+  document.getElementById('results').classList.add('open');
+}
+
+// ── RESET / EXPORT / IMPORT ──
+function resetAll(){
+  if(!confirm('Tout effacer ?'))return;
+  curTab().blocks=[];highlighted=[];save();render();toast('Plan effacé');
+}
+function exportData(){
+  var blob=new Blob([JSON.stringify({tabs:tabs,activeTab:activeTab,nextTabId:nextTabId},null,2)],{type:'application/json'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='plan-parc.json';a.click();
+  toast('Export téléchargé');
+}
+function importData(e){
+  var f=e.target.files[0];if(!f)return;
+  var r=new FileReader();
+  r.onload=function(ev){
+    try{
+      var d=JSON.parse(ev.target.result);
+      if(d.tabs){
+        tabs=d.tabs;activeTab=d.activeTab||0;nextTabId=d.nextTabId||2;
+      } else {
+        // ancien format
+        var t=curTab();
+        t.ncols=d.ncols||100;t.nrows=d.nrows||30;t.ppp=d.ppp||2;t.blocks=d.blocks||[];
+      }
+      syncInputs();save();renderTabs();render();toast('Import réussi');
+    }catch(err){alert('Fichier invalide.');}
+  };
+  r.readAsText(f);e.target.value='';
+}
+
+// ── IMPRESSION ──
+function openPrint(){
+  var c1=1,c2=curTab().ncols,r1=1,r2=curTab().nrows;
+  var hasZone=zoneSel.active;
+  if(hasZone){
+    c1=Math.min(zoneSel.c1,zoneSel.c2)+1; c2=Math.max(zoneSel.c1,zoneSel.c2)+1;
+    r1=Math.min(zoneSel.r1,zoneSel.r2)+1; r2=Math.max(zoneSel.r1,zoneSel.r2)+1;
+  }
+  document.getElementById('pr-c1').value=c1;
+  document.getElementById('pr-c2').value=c2;
+  document.getElementById('pr-r1').value=r1;
+  document.getElementById('pr-r2').value=r2;
+  document.getElementById('pr-sel-field').style.display=hasZone?'block':'none';
+  if(hasZone) document.getElementById('pr-sel-only').checked=true;
+  document.getElementById('modalPrint').classList.add('open');
+}
+function doPrint(){
+  var title=document.getElementById('pr-title').value||'Plan des parcs';
+  var fmt2=document.getElementById('pr-format').value;
+  var ori=document.getElementById('pr-orient').value;
+  var c1=Math.max(0,(parseInt(document.getElementById('pr-c1').value)||1)-1);
+  var c2=Math.min(ncols,parseInt(document.getElementById('pr-c2').value)||ncols);
+  var r1=Math.max(0,(parseInt(document.getElementById('pr-r1').value)||1)-1);
+  var r2=Math.min(nrows,parseInt(document.getElementById('pr-r2').value)||nrows);
+  var nums=document.getElementById('pr-nums').checked;
+  var empty=document.getElementById('pr-empty').checked;
+  var map=occ();
+  var th='<colgroup>'+(nums?'<col style="width:28px">':'');
+  for(var ci=c1;ci<c2;ci++)th+='<col>';
+  th+='</colgroup>';
+  if(nums){th+='<thead><tr><th style="background:#f8f9fa;border:0.5px solid #ddd;font-size:8px"></th>';for(var c=c1;c<c2;c++)th+='<th style="background:#f8f9fa;border:0.5px solid #ddd;font-size:8px;text-align:center">'+(c+1)+'</th>';th+='</tr></thead>';}
+  var tb='<tbody>';
+  var rendered={};
+  for(var r=r1;r<r2;r++){
+    tb+='<tr>'+(nums?'<td style="background:#f8f9fa;border:0.5px solid #ddd;font-size:8px;text-align:right;padding-right:3px">L'+(r+1)+'</td>':'');
+    var c3=c1;
+    while(c3<c2){
+      var bi=map[r+'_'+c3];
+      if(bi===undefined){tb+='<td style="border:0.5px solid '+(empty?'#e2e8f0':'#f5f5f5')+';background:#fff"></td>';c3++;continue;}
+      var b=curTab().blocks[bi];
+      var cells2=bcells(b);
+      var isVert2=b.dir==='up'||b.dir==='down';
+      var isFirst2=!cells2.some(function(p){return map[p[0]+'_'+p[1]]===bi&&(p[0]<r||(p[0]===r&&p[1]<c3));});
+      if(!isFirst2){c3++;continue;}
+      var lbl2=b.type==='libre'?(b.text||''):blabel(b);
+      var sty='background:'+b.color+'55;border:'+(b.bwidth||2)+'px '+(b.bstyle||'double')+' '+(b.bcolor||'#1a202c')+';color:'+darken(b.color)+';font-size:'+(b.fsize||10)+'px;font-weight:'+(b.fweight||700)+';text-align:'+(b.align||'center')+';overflow:hidden;white-space:nowrap;text-overflow:ellipsis';
+      var visCells=cells2.filter(function(p){return p[0]===r&&p[1]>=c1&&p[1]<c2;});
+      var span2=isVert2?1:Math.max(1,visCells.length);
+      var spanAttr2=isVert2?'rowspan="'+Math.min(cells2.length,r2-r)+'"':'colspan="'+span2+'"';
+      tb+='<td '+spanAttr2+' style="'+sty+'">'+esc(lbl2)+'</td>';
+      if(isVert2)c3++; else c3+=cells2.length;
+    }
+    tb+='</tr>';
+  }
+  tb+='</tbody>';
+  var w=window.open('','_p','width=1200,height=900');
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+esc(title)+'</title><style>@page{size:'+fmt2+' '+ori+';margin:8mm}body{font-family:sans-serif;margin:0}h1{font-size:13px;margin:0 0 5px}table{border-collapse:collapse;table-layout:fixed;width:100%}td,th{padding:0;overflow:hidden;min-width:0;box-sizing:border-box}</style></head><body><h1>'+esc(title)+'</h1><table>'+th+tb+'</table><script>window.onload=function(){window.print();window.close();}<\/script></body></html>');
+  w.document.close();
+  closeModal('modalPrint');
+}
+
+// ── INIT ──
+load();
+renderTabs();
+render();
+
 </script>
 </body>
 </html>
