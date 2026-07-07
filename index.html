@@ -1694,12 +1694,16 @@ var zoneSelDrag = false, zoneR0=0, zoneC0=0;
 function toggleSelMode(){
   selMode = !selMode;
   var btn = document.getElementById('selModeBtn');
-  btn.className = selMode ? 'btn btn-primary' : 'btn';
+  // Style bouton actif/inactif
+  btn.style.background = selMode ? '#0ea5e9' : '#fff';
+  btn.style.color = selMode ? '#fff' : '#1a202c';
+  btn.textContent = selMode ? '✕ Arrêter sélection' : 'Sélection';
   document.getElementById('selInfo').style.display = selMode ? 'inline-block' : 'none';
   if(!selMode){
     zoneSel.active = false;
     document.getElementById('selInfo').textContent = '';
-    document.getElementById('pr-sel-field').style.display = 'none';
+    var psf = document.getElementById('pr-sel-field');
+    if(psf) psf.style.display = 'none';
     renderZoneSel();
   }
   document.getElementById('gridWrap').style.cursor = selMode ? 'cell' : 'crosshair';
@@ -2068,7 +2072,7 @@ function doSearch(){
 
 function clearSearch(){
   highlighted=[];document.getElementById('inp-search').value='';
-  document.getElementById('results').classList.remove('open');
+  document.getElementById('plan-results').classList.remove('open');
   planRender();
 }
 
@@ -2081,8 +2085,8 @@ function calcVides(){
   if(!idx.length){showRes('Aucun emplacement vide détecté.');return;}
   var tot=idx.reduce(function(s,bi){return s+(parseInt(curTab().blocks[bi].poches)||parseInt(curTab().blocks[bi].nbcases)||0);},0);
   highlighted=idx;planRender();
-  var rows=idx.map(function(bi){return '<tr onclick="highlighted=['+bi+'];render()"><td>L'+(curTab().blocks[bi].row+1)+'</td><td>'+(curTab().blocks[bi].poches||curTab().blocks[bi].nbcases||0)+'p</td></tr>';}).join('');
-  showRes('<div style="display:flex;align-items:center;justify-content:space-between"><strong>'+idx.length+' emplacement'+(idx.length>1?'s':'')+' vide — '+tot+' poches</strong><button class="btn" onclick="highlighted='+JSON.stringify(idx)+';render()">Tout sélectionner</button></div><table><tr><th>Rangée</th><th>Poches</th></tr>'+rows+'</table>');
+  var rows=idx.map(function(bi){return '<tr onclick="highlighted=['+bi+'];planRender()"><td>L'+(curTab().blocks[bi].row+1)+'</td><td>'+(curTab().blocks[bi].poches||curTab().blocks[bi].nbcases||0)+'p</td></tr>';}).join('');
+  showRes('<div style="display:flex;align-items:center;justify-content:space-between"><strong>'+idx.length+' emplacement'+(idx.length>1?'s':'')+' vide — '+tot+' poches</strong><button class="btn" onclick="highlighted='+JSON.stringify(idx)+';planRender()">Tout sélectionner</button></div><table><tr><th>Rangée</th><th>Poches</th></tr>'+rows+'</table>');
 }
 
 function calcRef(ref){
@@ -2093,15 +2097,15 @@ function calcRef(ref){
   var rows=idx.map(function(bi){
     var b=curTab().blocks[bi];var p=parseInt(b.poches)||0;var kg=parseFloat(b.poids)||0;var l=kg?+(p*kg).toFixed(1):0;
     totP+=p;totKg+=l;
-    return '<tr onclick="highlighted=['+bi+'];render()"><td>'+esc(b.lot||'—')+'</td><td>'+p+'p</td><td>'+(kg?kg+'kg':'—')+'</td><td>'+(l?l+'kg':'—')+'</td></tr>';
+    return '<tr onclick="highlighted=['+bi+'];planRender()"><td>'+esc(b.lot||'—')+'</td><td>'+p+'p</td><td>'+(kg?kg+'kg':'—')+'</td><td>'+(l?l+'kg':'—')+'</td></tr>';
   }).join('');
   highlighted=idx;planRender();
-  showRes('<div style="display:flex;align-items:center;justify-content:space-between"><strong>'+esc(ref)+' — '+totP+' poches — '+totKg.toFixed(1)+' kg</strong><button class="btn" onclick="highlighted='+JSON.stringify(idx)+';render()">Tout sélectionner</button></div><table><tr><th>Lot</th><th>Poches</th><th>Poids/p</th><th>Total</th></tr>'+rows+'</table>');
+  showRes('<div style="display:flex;align-items:center;justify-content:space-between"><strong>'+esc(ref)+' — '+totP+' poches — '+totKg.toFixed(1)+' kg</strong><button class="btn" onclick="highlighted='+JSON.stringify(idx)+';planRender()">Tout sélectionner</button></div><table><tr><th>Lot</th><th>Poches</th><th>Poids/p</th><th>Total</th></tr>'+rows+'</table>');
 }
 
 function showRes(html){
-  document.getElementById('res-content').innerHTML=html;
-  document.getElementById('results').classList.add('open');
+  document.getElementById('plan-res-content').innerHTML=html;
+  document.getElementById('plan-results').classList.add('open');
 }
 
 // ── RESET / EXPORT / IMPORT ──
