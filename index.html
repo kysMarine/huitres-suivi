@@ -2,264 +2,90 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Suivi des lots d'huîtres</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>KYS Marine</title>
 <style>
-  *{box-sizing:border-box;margin:0;padding:0}
-  :root{
-    --bg:#f8f9fa;--surface:#fff;--border:#e2e8f0;--text:#1a202c;--text2:#718096;
-    --primary:#0ea5e9;--primary-dark:#0284c7;--teal:#0f9e75;--amber:#b97a15;
-    --coral:#c03a1d;--purple:#534ab7;--danger:#e24b4a;
-  }
-  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-  
-  /* AUTH */
-  #auth-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1rem}
-  .auth-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:2rem;width:100%;max-width:360px}
-  .auth-logo{text-align:center;margin-bottom:1.5rem}
-  .auth-logo .icon{font-size:2.5rem}
-  .auth-logo h1{font-size:1.25rem;font-weight:600;margin-top:.5rem}
-  .auth-logo p{font-size:.85rem;color:var(--text2);margin-top:.25rem}
-  .field{margin-bottom:1rem}
-  .field label{display:block;font-size:.8rem;font-weight:500;margin-bottom:.35rem;color:var(--text2)}
-  .field input{width:100%;padding:.6rem .85rem;border:1px solid var(--border);border-radius:8px;font-size:.9rem;background:var(--surface);color:var(--text);outline:none;transition:border .15s}
-  .field input:focus{border-color:var(--primary)}
-  .btn{width:100%;padding:.65rem;border:none;border-radius:8px;font-size:.9rem;font-weight:500;cursor:pointer;transition:background .15s}
-  .btn-primary{background:var(--primary);color:#fff}
-  .btn-primary:hover{background:var(--primary-dark)}
-  .btn-outline{background:transparent;border:1px solid var(--border);color:var(--text);margin-top:.5rem}
-  .btn-outline:hover{background:var(--bg)}
-  .auth-error{color:var(--danger);font-size:.8rem;margin-top:.5rem;text-align:center;min-height:1rem}
-  .auth-switch{text-align:center;font-size:.8rem;color:var(--text2);margin-top:1rem}
-  .auth-switch a{color:var(--primary);cursor:pointer;text-decoration:none}
-
-  /* APP LAYOUT */
-  #app{display:none;min-height:100vh;flex-direction:column}
-  header{background:var(--surface);border-bottom:1px solid var(--border);padding:.75rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
-  .header-left{display:flex;align-items:center;gap:.75rem}
-  .header-logo{font-size:1.1rem;font-weight:600}
-  .header-sub{font-size:.75rem;color:var(--text2)}
-  .header-right{display:flex;align-items:center;gap:.75rem}
-  .user-badge{font-size:.8rem;color:var(--text2);background:var(--bg);padding:.3rem .7rem;border-radius:6px;border:1px solid var(--border)}
-  .btn-sm{padding:.3rem .7rem;font-size:.8rem;border-radius:6px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text)}
-  .btn-sm:hover{background:var(--bg)}
-  .main{flex:1;padding:1.5rem;max-width:900px;margin:0 auto;width:100%}
-  /* Plan des parcs fullscreen */
-  #tab-plan{position:fixed;inset:0;z-index:40;flex-direction:column;background:#fff;display:none}
-  #tab-plan .header{position:relative;top:auto;flex-shrink:0}
-  #tab-plan .grid-wrap{flex:1;min-height:0}
-  #tab-plan .nav-parcs,#tab-plan .nav-zones{flex-shrink:0}
-
-  /* TABS */
-  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:1.5rem;overflow-x:auto}
-  .tab{padding:.5rem 1rem;font-size:.85rem;background:none;border:none;cursor:pointer;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:color .15s}
-  .tab.active{color:var(--text);border-bottom-color:var(--primary);font-weight:500}
-  .section{display:none}.section.active{display:block}
-
-  /* CARDS */
-  .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin-bottom:12px}
-  .card-title{font-size:.95rem;font-weight:500;margin-bottom:1rem}
-
-  /* STATS */
-  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:1.5rem}
-  .stat{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem;text-align:center}
-  .stat-num{font-size:1.6rem;font-weight:600}
-  .stat-lbl{font-size:.75rem;color:var(--text2);margin-top:.2rem}
-
-  /* FORM */
-  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  .form-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
-  .field-inline label{font-size:.8rem;font-weight:500;margin-bottom:.3rem;display:block;color:var(--text2)}
-  .field-inline input,.field-inline select,.field-inline textarea{width:100%;padding:.55rem .8rem;border:1px solid var(--border);border-radius:8px;font-size:.85rem;background:var(--surface);color:var(--text);font-family:inherit;outline:none}
-  .field-inline input:focus,.field-inline select:focus,.field-inline textarea:focus{border-color:var(--primary)}
-  .field-inline{margin-bottom:12px}
-
-  /* LOTS */
-  .lot-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem 1.25rem;margin-bottom:10px;cursor:pointer;transition:border-color .15s}
-  .lot-card:hover{border-color:var(--primary)}
-  .lot-header{display:flex;align-items:center;justify-content:space-between}
-  .lot-num{font-size:.95rem;font-weight:500}
-  .lot-meta{font-size:.75rem;color:var(--text2);margin-top:.2rem}
-
-  /* BADGES */
-  .badge{display:inline-block;padding:2px 8px;border-radius:6px;font-size:.7rem;font-weight:500}
-  .b-teal{background:#e1f5ee;color:#0a6647}
-  .b-blue{background:#e6f1fb;color:#0c447c}
-  .b-amber{background:#faeeda;color:#633806}
-  .b-coral{background:#faece7;color:#7a2e14}
-  .b-purple{background:#eeedfe;color:#3c3489}
-  .b-gray{background:#f1efe8;color:#444}
-  .b-pink{background:#fbeaf0;color:#72243e}
-
-  /* SEARCH BAR */
-  .search-bar{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap}
-  .search-bar input{flex:1;min-width:150px;padding:.55rem .8rem;border:1px solid var(--border);border-radius:8px;font-size:.85rem;background:var(--surface);color:var(--text);outline:none}
-  .search-bar input:focus{border-color:var(--primary)}
-  .search-bar select{padding:.55rem .8rem;border:1px solid var(--border);border-radius:8px;font-size:.85rem;background:var(--surface);color:var(--text);min-width:130px}
-
-  /* TIMELINE */
-  .timeline{list-style:none;padding:0}
-  .tl-item{display:flex;gap:10px;padding-bottom:14px;position:relative}
-  .tl-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:4px}
-  .tl-line{position:absolute;left:4px;top:14px;bottom:0;width:1px;background:var(--border)}
-  .tl-item:last-child .tl-line{display:none}
-  .dot-creation{background:#aaa}
-  .dot-criblage{background:var(--teal)}
-  .dot-calibrage{background:var(--amber)}
-  .dot-dedoublage{background:var(--purple)}
-  .dot-deplacement{background:var(--primary)}
-  .dot-remise{background:var(--coral)}
-  .tl-title{font-size:.82rem;font-weight:500}
-  .tl-meta{font-size:.75rem;color:var(--text2);margin-top:1px}
-
-  /* MODAL */
-  .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center;padding:1rem}
-  .overlay.open{display:flex}
-  .modal{background:var(--surface);border-radius:16px;padding:1.5rem;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
-  .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
-  .modal-title{font-size:1rem;font-weight:500}
-  .close-btn{background:none;border:none;font-size:1.1rem;cursor:pointer;color:var(--text2);padding:.2rem .4rem;border-radius:6px}
-  .close-btn:hover{background:var(--bg)}
-
-  /* OP BUTTONS */
-  .op-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem}
-  .op-btn{padding:.8rem .5rem;border:1px solid var(--border);border-radius:8px;background:var(--surface);cursor:pointer;font-size:.8rem;text-align:center;color:var(--text);transition:all .15s}
-  .op-btn:hover{border-color:var(--primary);background:#f0f9ff}
-  .op-btn.selected{border-color:var(--primary);background:#e0f2fe;font-weight:500}
-  .crib-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px}
-
-  /* BUTTONS */
-  .btn-action{padding:.55rem 1rem;border-radius:8px;font-size:.85rem;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text);display:inline-flex;align-items:center;gap:.4rem;transition:all .15s}
-  .btn-action:hover{background:var(--bg)}
-  .btn-action.primary{background:var(--primary);color:#fff;border-color:var(--primary)}
-  .btn-action.primary:hover{background:var(--primary-dark)}
-  .btn-action.danger{color:var(--danger);border-color:var(--danger)}
-  .btn-action.danger:hover{background:#fff5f5}
-  .btn-full{width:100%;justify-content:center;margin-top:.5rem}
-
-  /* EXPORT */
-  .export-bar{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap}
-
-  /* LOADING */
-  .loading{text-align:center;padding:2rem;color:var(--text2);font-size:.9rem}
-  .empty{text-align:center;padding:2.5rem;color:var(--text2);font-size:.9rem}
-
-  /* SETUP INFO */
-  .setup-box{background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.5rem;font-size:.82rem;line-height:1.6}
-  .setup-box strong{display:block;margin-bottom:.3rem;font-size:.85rem}
-  .setup-box code{background:#fef3c7;padding:1px 5px;border-radius:4px;font-family:monospace;font-size:.8rem}
-
-  @media(max-width:500px){
-    .form-row,.form-row3{grid-template-columns:1fr}
-    .main{padding:1rem}
-    header{padding:.75rem 1rem}
-  }
-
-/* ═══ PLAN DES PARCS ═══ */
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8f9fa;color:#1a202c;height:100vh;display:flex;flex-direction:column}
-
-/* HEADER */
-.header{background:#fff;border-bottom:1px solid #e2e8f0;padding:.75rem 1.25rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap;z-index:50;flex-shrink:0}
-.header h1{font-size:1rem;font-weight:600;margin-right:8px}
-.btn{padding:.4rem .9rem;border-radius:8px;font-size:.82rem;font-weight:500;cursor:pointer;border:1px solid #e2e8f0;background:#fff;color:#1a202c;white-space:nowrap}
-.btn:hover{background:#f1f5f9}
-.btn-primary{background:#0ea5e9;color:#fff;border-color:#0ea5e9}
-.btn-primary:hover{background:#0284c7}
-.btn-danger{color:#e24b4a;border-color:#fecaca}
-.btn-danger:hover{background:#fff5f5}
-.sep{width:1px;height:20px;background:#e2e8f0;flex-shrink:0}
-.zoom-info{font-size:.78rem;color:#718096;min-width:40px;text-align:center}
-
-/* GRILLE */
-.grid-wrap{overflow:auto;flex:1;min-height:200px;cursor:crosshair;background:#fff}
-.grid-inner{display:inline-block}
-table{border-collapse:collapse;table-layout:fixed;width:0}
-col{width:20px}
-col.rowhead-col{width:40px}
-td,th{border:0.5px solid #e8eaed;padding:0;overflow:hidden;min-width:0;box-sizing:border-box}
-th.corner{position:sticky;top:0;left:0;z-index:10;background:#f8f9fa;width:40px;height:20px}
-th.ch{font-size:7px;color:#bbb;font-weight:400;background:#f8f9fa;height:20px;text-align:center;position:sticky;top:0;z-index:3;width:20px;min-width:20px;max-width:20px}
-th.rh{font-size:7px;color:#bbb;font-weight:400;background:#f8f9fa;width:40px;min-width:40px;max-width:40px;text-align:right;padding-right:4px;position:sticky;left:0;z-index:2}
-td.cell{width:20px;min-width:20px;max-width:20px;height:20px;min-height:20px;max-height:20px;background:#fff;cursor:crosshair}
-td.cell:hover{background:#eff6ff}
-td.cell.drag-sel{background:#bfdbfe}
-td.cell.zone-sel{background:#bbf7d0;outline:1px solid #22c55e;outline-offset:-1px}
-td.blockcell{font-size:8px;font-weight:600;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer}
-td.blockcell:hover{filter:brightness(.93)}
-td.blockcell.highlighted{outline:2px solid #e63946;outline-offset:-1px;z-index:2}
-
-/* MODAL */
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:200;align-items:center;justify-content:center;padding:1rem}
+:root{--bg:#f8f9fa;--surface:#fff;--border:#e2e8f0;--text:#1a202c;--text2:#718096;--primary:#0ea5e9;--primary-dark:#0284c7;--teal:#0f9e75;--amber:#b97a15;--coral:#c03a1d;--purple:#534ab7;--danger:#e24b4a}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+#auth-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1rem}
+.auth-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:2rem;width:100%;max-width:360px}
+.auth-logo{text-align:center;margin-bottom:1.5rem}
+.auth-logo .icon{font-size:2.5rem}
+.auth-logo h1{font-size:1.25rem;font-weight:600;margin-top:.5rem}
+.auth-logo p{font-size:.85rem;color:var(--text2);margin-top:.25rem}
+.field{margin-bottom:1rem}
+.field label{display:block;font-size:.8rem;font-weight:500;margin-bottom:.35rem;color:var(--text2)}
+.field input{width:100%;padding:.6rem .85rem;border:1px solid var(--border);border-radius:8px;font-size:.9rem;background:var(--surface);color:var(--text);outline:none}
+.field input:focus{border-color:var(--primary)}
+.btn{width:100%;padding:.65rem;border:none;border-radius:8px;font-size:.9rem;font-weight:500;cursor:pointer}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text);margin-top:.5rem}
+.auth-error{color:var(--danger);font-size:.8rem;margin-top:.5rem;text-align:center;min-height:1rem}
+#app{display:none;min-height:100vh;flex-direction:column}
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:.75rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.header-left{display:flex;align-items:center;gap:.75rem}
+.header-logo{font-size:1.1rem;font-weight:600}
+.header-sub{font-size:.75rem;color:var(--text2)}
+.header-right{display:flex;align-items:center;gap:.75rem}
+.user-badge{font-size:.8rem;color:var(--text2);background:var(--bg);padding:.3rem .7rem;border-radius:6px;border:1px solid var(--border)}
+.btn-sm{padding:.3rem .7rem;font-size:.8rem;border-radius:6px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text)}
+.main{flex:1;padding:1.5rem;max-width:100%;margin:0 auto;width:100%}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:1.5rem;overflow-x:auto}
+.tab{padding:.5rem 1rem;font-size:.85rem;background:none;border:none;cursor:pointer;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tab.active{color:var(--text);border-bottom-color:var(--primary);font-weight:500}
+.section{display:none}.section.active{display:block}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin-bottom:12px;max-width:900px}
+.card-title{font-size:.95rem;font-weight:500;margin-bottom:1rem}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:1.5rem;max-width:900px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem;text-align:center}
+.stat-num{font-size:1.6rem;font-weight:600}
+.stat-lbl{font-size:.75rem;color:var(--text2);margin-top:.2rem}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:900px}
+.field-inline label{font-size:.8rem;font-weight:500;margin-bottom:.3rem;display:block;color:var(--text2)}
+.field-inline input,.field-inline select,.field-inline textarea{width:100%;padding:.55rem .8rem;border:1px solid var(--border);border-radius:8px;font-size:.85rem;background:var(--surface);color:var(--text);font-family:inherit;outline:none}
+.field-inline{margin-bottom:12px}
+.lot-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem 1.25rem;margin-bottom:10px;cursor:pointer;max-width:900px}
+.lot-card:hover{border-color:var(--primary)}
+.lot-header{display:flex;align-items:center;justify-content:space-between}
+.lot-num{font-size:.95rem;font-weight:500}
+.lot-meta{font-size:.75rem;color:var(--text2);margin-top:.2rem}
+.badge{display:inline-block;padding:2px 8px;border-radius:6px;font-size:.7rem;font-weight:500}
+.b-teal{background:#e1f5ee;color:#0a6647}.b-blue{background:#e6f1fb;color:#0c447c}
+.b-amber{background:#faeeda;color:#633806}.b-coral{background:#faece7;color:#7a2e14}
+.b-purple{background:#eeedfe;color:#3c3489}.b-gray{background:#f1efe8;color:#444}.b-pink{background:#fbeaf0;color:#72243e}
+.search-bar{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;max-width:900px}
+.search-bar input{flex:1;min-width:150px;padding:.55rem .8rem;border:1px solid var(--border);border-radius:8px;font-size:.85rem;background:var(--surface);color:var(--text);outline:none}
+.search-bar select{padding:.55rem .8rem;border:1px solid var(--border);border-radius:8px;font-size:.85rem;background:var(--surface);color:var(--text)}
+.timeline{list-style:none;padding:0;max-width:900px}
+.tl-item{display:flex;gap:10px;padding-bottom:14px;position:relative}
+.tl-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.tl-line{position:absolute;left:4px;top:14px;bottom:0;width:1px;background:var(--border)}
+.tl-item:last-child .tl-line{display:none}
+.dot-creation{background:#aaa}.dot-criblage{background:var(--teal)}.dot-calibrage{background:var(--amber)}
+.dot-deplacement{background:var(--primary)}.dot-remise{background:var(--coral)}
+.tl-title{font-size:.82rem;font-weight:500}
+.tl-meta{font-size:.75rem;color:var(--text2);margin-top:1px}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center;padding:1rem}
 .overlay.open{display:flex}
-.modal{background:#fff;border-radius:14px;padding:1.25rem;width:100%;max-width:340px;max-height:90vh;overflow-y:auto}
-.modal-title{font-size:.95rem;font-weight:600;margin-bottom:12px}
-.field{margin-bottom:9px}
-.field label{display:block;font-size:.75rem;color:#718096;margin-bottom:3px}
-.field input,.field select,.field textarea{width:100%;padding:.4rem .6rem;border:1px solid #e2e8f0;border-radius:7px;font-size:.82rem;font-family:inherit}
-.swatches{display:flex;gap:5px;flex-wrap:wrap;margin-top:4px}
-.swatch{width:22px;height:22px;border-radius:5px;cursor:pointer;border:2px solid transparent;flex-shrink:0}
-.swatch.sel{border-color:#1a202c}
-.modal-btns{display:flex;gap:7px;margin-top:12px}
-.modal-btns .btn{flex:1;text-align:center}
-.info-box{background:#e0f2fe;border:1px solid #bae6fd;border-radius:7px;padding:.4rem .7rem;font-size:.75rem;color:#075985;margin-bottom:9px;display:none}
+.modal{background:var(--surface);border-radius:16px;padding:1.5rem;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.modal-title{font-size:1rem;font-weight:500}
+.close-btn{background:none;border:none;font-size:1.1rem;cursor:pointer;color:var(--text2);padding:.2rem .4rem;border-radius:6px}
+.op-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem}
+.op-btn{padding:.8rem .5rem;border:1px solid var(--border);border-radius:8px;background:var(--surface);cursor:pointer;font-size:.8rem;text-align:center;color:var(--text)}
+.op-btn:hover{border-color:var(--primary);background:#f0f9ff}
+.op-btn.selected{border-color:var(--primary);background:#e0f2fe;font-weight:500}
+.crib-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px}
+.btn-action{padding:.55rem 1rem;border-radius:8px;font-size:.85rem;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text);display:inline-flex;align-items:center;gap:.4rem}
+.btn-action.primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+.btn-action.danger{color:var(--danger);border-color:var(--danger)}
+.btn-full{width:100%;justify-content:center;margin-top:.5rem}
+.loading{text-align:center;padding:2rem;color:var(--text2);font-size:.9rem}
+.empty{text-align:center;padding:2.5rem;color:var(--text2);font-size:.9rem}
+.setup-box{background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.5rem;font-size:.82rem}
+/* Plan des parcs */
 
-/* RESULTATS */
-.results{padding:.75rem 1.25rem;background:#fff;border-bottom:1px solid #e2e8f0;display:none;flex-shrink:0}
-.results.open{display:block}
-.res-card{font-size:.82rem}
-.res-card table{width:100%;border-collapse:collapse;margin-top:8px}
-.res-card th{text-align:left;padding:4px 8px;border-bottom:1px solid #e2e8f0;font-size:.75rem;font-weight:500;background:#f8f9fa}
-.res-card td{padding:4px 8px;border-bottom:1px solid #f1f5f9}
-.res-card tr:hover td{background:#f0f9ff;cursor:pointer}
-
-/* PRINT */
-@media print{
-  .header,.results{display:none!important}
-  .grid-wrap{height:auto;overflow:visible}
-  .grid-inner{transform:none!important}
-}
-
-/* ONGLETS */
-/* NAVIGATION PARCS / ZONES */
-.nav-parcs{display:flex;align-items:center;gap:0;background:#1e293b;padding:0 1rem;flex-shrink:0;overflow-x:auto}
-.parc-tab{padding:.5rem 1.1rem;font-size:.82rem;font-weight:500;cursor:pointer;border:none;background:none;color:#94a3b8;white-space:nowrap;display:flex;align-items:center;gap:6px;border-bottom:2px solid transparent}
-.parc-tab:hover{color:#e2e8f0}
-.parc-tab.active{color:#fff;border-bottom-color:#0ea5e9}
-.parc-add{padding:.5rem .8rem;font-size:1rem;color:#64748b;cursor:pointer;border:none;background:none}
-.parc-add:hover{color:#0ea5e9}
-.nav-zones{display:flex;align-items:center;gap:0;background:#f8fafc;border-bottom:1px solid #e2e8f0;padding:0 .75rem;flex-shrink:0;overflow-x:auto}
-.zone-tab{padding:.4rem .9rem;font-size:.8rem;font-weight:500;cursor:pointer;border:none;background:none;color:#64748b;white-space:nowrap;display:flex;align-items:center;gap:5px;border-bottom:2px solid transparent}
-.zone-tab:hover{color:#1a202c}
-.zone-tab.active{color:#0ea5e9;border-bottom-color:#0ea5e9;background:#fff}
-.zone-add{padding:.4rem .6rem;font-size:.9rem;color:#94a3b8;cursor:pointer;border:none;background:none}
-.zone-add:hover{color:#0ea5e9}
-.tab-close{font-size:.65rem;color:#a0aec0;cursor:pointer;border-radius:3px;padding:1px 3px;line-height:1}
-.tab-close:hover{background:#fecaca;color:#e24b4a}
-.nav-label{font-size:.7rem;font-weight:600;color:#475569;padding:0 .5rem 0 0;text-transform:uppercase;letter-spacing:.05em}
-/* MENU CONTEXTUEL */
-.ctx-menu{display:none;position:fixed;background:#fff;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.12);z-index:300;min-width:180px;overflow:hidden}
-.ctx-menu.open{display:block}
-.ctx-label{font-size:.72rem;font-weight:600;color:#718096;padding:.4rem .9rem .2rem;text-transform:uppercase;letter-spacing:.04em}
-.ctx-item{display:block;width:100%;text-align:left;padding:.5rem .9rem;font-size:.82rem;cursor:pointer;border:none;background:#fff;color:#1a202c}
-.ctx-item:hover{background:#f8f9fa}
-.ctx-danger{color:#e24b4a}
-.ctx-danger:hover{background:#fff5f5}
-.ctx-sep{height:1px;background:#e2e8f0;margin:2px 0}
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a202c;color:#fff;padding:.5rem 1.1rem;border-radius:10px;font-size:.82rem;opacity:0;transition:opacity .25s;pointer-events:none;z-index:500}
-.toast.show{opacity:1}
-
-/* DROPDOWN */
-.dropdown{position:relative;display:inline-block}
-.dropdown-btn{display:flex;align-items:center;gap:4px}
-.dropdown-btn::after{content:'▾';font-size:.65rem;color:#718096}
-.dropdown-menu{display:none;position:absolute;top:calc(100% + 4px);left:0;background:#fff;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.1);min-width:160px;z-index:1000;overflow:hidden}
-.dropdown-menu.open{display:block}
-.dropdown-item{display:block;width:100%;text-align:left;padding:.55rem 1rem;font-size:.82rem;font-weight:500;cursor:pointer;border:none;background:#fff;color:#1a202c}
-.dropdown-item:hover{background:#f8f9fa}
-.dropdown-sep{height:1px;background:#e2e8f0;margin:2px 0}
-
-/* ═══ CSS PLAN DES PARCS ═══ */
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8f9fa;color:#1a202c;height:100vh;display:flex;flex-direction:column}
 
@@ -362,11 +188,17 @@ td.blockcell.highlighted{outline:2px solid #e63946;outline-offset:-1px;z-index:2
 .dropdown-item{display:block;width:100%;text-align:left;padding:.55rem 1rem;font-size:.82rem;font-weight:500;cursor:pointer;border:none;background:#fff;color:#1a202c}
 .dropdown-item:hover{background:#f8f9fa}
 .dropdown-sep{height:1px;background:#e2e8f0;margin:2px 0}
+
+/* Plan dans onglet */
+#tab-plan.active{display:flex;flex-direction:column;margin:-1.5rem;height:calc(100vh - 110px);overflow:hidden}
+#tab-plan .header{flex-shrink:0;position:relative}
+#tab-plan .nav-parcs,#tab-plan .nav-zones{flex-shrink:0}
+#tab-plan .results{flex-shrink:0}
+#tab-plan .grid-wrap{flex:1;min-height:0}
 </style>
 </head>
 <body>
 
-<!-- ═══════════════════ AUTH SCREEN ═══════════════════ -->
 <div id="auth-screen">
   <div class="auth-card">
     <div class="auth-logo">
@@ -374,64 +206,38 @@ td.blockcell.highlighted{outline:2px solid #e63946;outline-offset:-1px;z-index:2
       <h1>KYS Marine</h1>
       <p>Suivi des lots d'huîtres</p>
     </div>
-
     <div id="login-form">
-      <div class="field">
-        <label>Email</label>
+      <div class="field"><label>Email</label>
         <input type="email" id="login-email" placeholder="votre@email.com" autocomplete="email">
       </div>
-      <div class="field">
-        <label>Mot de passe</label>
+      <div class="field"><label>Mot de passe</label>
         <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
       </div>
       <div class="auth-error" id="login-error"></div>
       <button class="btn btn-primary" onclick="doLogin()">Se connecter</button>
       <button class="btn btn-outline" onclick="showRegister()">Demander un accès</button>
     </div>
-
     <div id="register-form" style="display:none">
-      <div class="field">
-        <label>Nom complet</label>
-        <input type="text" id="reg-name" placeholder="Votre nom">
-      </div>
-      <div class="field">
-        <label>Email</label>
-        <input type="email" id="reg-email" placeholder="votre@email.com">
-      </div>
-      <div class="field">
-        <label>Mot de passe</label>
-        <input type="password" id="reg-password" placeholder="Minimum 6 caractères">
-      </div>
+      <div class="field"><label>Nom complet</label><input type="text" id="reg-name" placeholder="Votre nom"></div>
+      <div class="field"><label>Email</label><input type="email" id="reg-email"></div>
+      <div class="field"><label>Mot de passe</label><input type="password" id="reg-password" placeholder="Minimum 6 caractères"></div>
       <div class="auth-error" id="reg-error"></div>
-      <button class="btn btn-primary" onclick="doRegister()">Envoyer la demande</button>
-      <button class="btn btn-outline" onclick="showLogin()">Retour à la connexion</button>
+      <button class="btn btn-primary" onclick="doRegister()">Créer le compte</button>
+      <button class="btn btn-outline" onclick="showLogin()">Déjà un compte ?</button>
     </div>
-
     <div id="firebase-setup-notice" class="setup-box" style="margin-top:1rem;display:none">
       <strong>⚠️ Configuration Firebase requise</strong>
-      Remplacez la configuration Firebase en haut du fichier JS par vos propres clés.
     </div>
   </div>
 </div>
 
-<!-- ÉCRAN EN ATTENTE -->
-<div id="pending-screen" style="display:none;align-items:center;justify-content:center;min-height:100vh;padding:1rem">
-  <div class="auth-card" style="text-align:center">
-    <div style="font-size:2.5rem;margin-bottom:1rem">⏳</div>
-    <h2 style="font-size:1.1rem;font-weight:600;margin-bottom:.5rem">Demande en attente</h2>
-    <p style="font-size:.85rem;color:var(--text2);margin-bottom:1.5rem">Votre demande d'accès a été envoyée à l'administrateur. Vous recevrez une confirmation dès qu'elle sera approuvée.</p>
-    <button class="btn btn-outline" onclick="doLogout()" style="width:auto;padding:.5rem 1.5rem">Se déconnecter</button>
-  </div>
-</div>
-
-<!-- ═══════════════════ APP ═══════════════════ -->
 <div id="app" style="display:none;flex-direction:column">
   <header>
     <div class="header-left">
       <span>🦪</span>
       <div>
-        <div class="header-logo">Lots d'huîtres</div>
-        <div class="header-sub">Traçabilité</div>
+        <div class="header-logo">KYS Marine</div>
+        <div class="header-sub">Suivi des lots</div>
       </div>
     </div>
     <div class="header-right">
@@ -439,20 +245,18 @@ td.blockcell.highlighted{outline:2px solid #e63946;outline-offset:-1px;z-index:2
       <button class="btn-sm" onclick="doLogout()">Déconnexion</button>
     </div>
   </header>
-
   <div class="main">
     <div class="tabs">
       <button class="tab active" onclick="showTab('dashboard')">📊 Tableau de bord</button>
-      <button class="tab" onclick="showTab('nouveau')">➕ Nouveau lot</button>
       <button class="tab" onclick="showTab('lots')">📦 Lots</button>
+      <button class="tab" onclick="showTab('nouveau')">➕ Nouveau lot</button>
       <button class="tab" onclick="showTab('plan')">🗺️ Plan des parcs</button>
       <button class="tab" onclick="showTab('export')">📥 Export</button>
       <button class="tab" id="tab-admin-btn" onclick="showTab('admin')" style="display:none">👤 Utilisateurs</button>
     </div>
 
-    <!-- DASHBOARD -->
     <div id="tab-dashboard" class="section active">
-      <div class="stat-grid" id="stats">
+      <div class="stat-grid">
         <div class="stat"><div class="stat-num" id="s-total">—</div><div class="stat-lbl">Lots actifs</div></div>
         <div class="stat"><div class="stat-num" id="s-ops">—</div><div class="stat-lbl">Opérations</div></div>
         <div class="stat"><div class="stat-num" id="s-lieux">—</div><div class="stat-lbl">Lieux</div></div>
@@ -464,253 +268,45 @@ td.blockcell.highlighted{outline:2px solid #e63946;outline-offset:-1px;z-index:2
       </div>
     </div>
 
-    <!-- LOTS -->
     <div id="tab-lots" class="section">
       <div class="search-bar">
-        <input type="text" id="search" placeholder="Rechercher un lot…" oninput="filterLots()">
-        <select id="filter-lieu" onchange="filterLots()">
+        <input type="text" id="search" placeholder="Rechercher un lot…" oninput="renderLots()">
+        <select id="filter-lieu" onchange="renderLots()">
           <option value="">Tous les lieux</option>
-          <option value="Riantec">Riantec</option><option value="Carnac">Carnac</option><option value="Locmariaquer">Locmariaquer</option>
-          <option value="Etel">Etel</option><option value="St Hélène">St Hélène</option><option value="Blaver">Blaver</option><option value="Golf">Golf</option>
+          <option>R:antec</option><option>Carnac</option><option>Locmariaquer</option>
+          <option>Etel</option><option>St Belène</option><option>Blaver</option><option>Golf</option>
         </select>
-        <button class="btn-action" onclick="document.getElementById('search').value='';document.getElementById('filter-lieu').value='';filterLots()" title="Réinitialiser">✕</button>
       </div>
       <div id="lots-list"><div class="loading">Chargement…</div></div>
     </div>
 
-    <!-- NOUVEAU LOT -->
     <div id="tab-nouveau" class="section">
       <div class="card">
         <div class="card-title">Créer un nouveau lot</div>
         <div class="form-row">
           <div class="field-inline"><label>Numéro de lot *</label><input type="text" id="n-num" placeholder="ex: 155 26"></div>
-          <div class="field-inline"><label>Date d'entrée</label><input type="date" id="n-date"></div>
+          <div class="field-inline"><label>Année</label><input type="number" id="n-annee" value="2026"></div>
         </div>
         <div class="form-row">
           <div class="field-inline"><label>Origine</label><input type="text" id="n-origine" placeholder="ex: Bretagne Nord"></div>
           <div class="field-inline"><label>Lieu initial</label>
             <select id="n-lieu">
-              <option>Riantec</option><option>Carnac</option><option>Locmariaquer</option>
-              <option>Etel</option><option>St Hélène</option><option>Blaver</option><option>Golf</option>
+              <option>R:antec</option><option>Carnac</option><option>Locmariaquer</option>
+              <option>Etel</option><option>St Belène</option><option>Blaver</option><option>Golf</option>
             </select>
           </div>
         </div>
         <div class="form-row">
           <div class="field-inline"><label>Quantité</label><input type="number" id="n-qte" placeholder="ex: 500"></div>
-          <div class="field-inline"><label>Unité</label>
-            <select id="n-unite">
-              <option value="Kg">Kg</option>
-              <option value="Nombres">Nombres</option>
-            </select>
-          </div>
+          <div class="field-inline"><label>Date d'entrée</label><input type="date" id="n-date"></div>
         </div>
-        <div class="field-inline"><label>Notes</label><textarea id="n-notes" rows="2" placeholder="Observations…"></textarea></div>
-        <button class="btn-action primary btn-full" onclick="creerLot()">Créer le lot</button>
+        <div class="field-inline" style="max-width:900px"><label>Notes</label><textarea id="n-notes" rows="2" placeholder="Observations…"></textarea></div>
+        <button class="btn-action primary btn-full" style="max-width:900px" onclick="creerLot()">Créer le lot</button>
       </div>
     </div>
 
-    <!-- EXPORT -->
-    <div id="tab-export" class="section">
-      <div class="card">
-        <div class="card-title">Exporter les données</div>
-        <p style="font-size:.85rem;color:var(--text2);margin-bottom:1rem">Téléchargez l'ensemble de vos données au format Excel (.xlsx) avec deux onglets : <em>Lots</em> et <em>Historique complet</em>.</p>
-        <button class="btn-action primary" onclick="exportExcel()">📥 Télécharger Excel</button>
-      </div>
-      <div class="card" style="margin-top:12px">
-        <div class="card-title">Répartition par lieu</div>
-        <div id="repartition-list"><div class="loading">Chargement…</div></div>
-      </div>
-    </div>
-
-    <!-- ADMIN -->
-    <div id="tab-admin" class="section">
-      <div class="card" style="margin-bottom:12px">
-        <div class="card-title">Demandes d'accès en attente</div>
-        <div id="admin-pending-list"><div class="loading">Chargement…</div></div>
-      </div>
-      <div class="card">
-        <div class="card-title">Utilisateurs actifs</div>
-        <div id="admin-users-list"><div class="loading">Chargement…</div></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-        <input type="text" id="inp-search" placeholder="Rechercher un lot..." style="width:160px;padding:.35rem .65rem;border:1px solid #e2e8f0;border-radius:7px;font-size:.82rem" onkeydown="if(event.key==='Enter')doSearch()">
-    <button onclick="doSearch()" style="padding:.35rem .75rem;border-radius:8px;font-size:.82rem;font-weight:500;cursor:pointer;border:none;background:#0ea5e9;color:#fff">Chercher</button>
-    <button onclick="clearSearch()" style="padding:.35rem .6rem;border-radius:8px;font-size:.82rem;cursor:pointer;border:1px solid #e2e8f0;background:#fff">✕</button>
-    <div style="width:1px;height:20px;background:#e2e8f0;flex-shrink:0"></div>
-    <label style="font-size:.75rem;color:#718096">Colonnes</label>
-    <input type="number" id="inp-cols" value="100" min="10" max="500" style="width:58px;padding:.3rem .5rem;border:1px solid #e2e8f0;border-radius:7px;font-size:.82rem">
-    <label style="font-size:.75rem;color:#718096">Rangées</label>
-    <input type="number" id="inp-rows" value="30" min="5" max="300" style="width:58px;padding:.3rem .5rem;border:1px solid #e2e8f0;border-radius:7px;font-size:.82rem">
-    <label style="font-size:.75rem;color:#718096">Poches/px</label>
-    <input type="number" id="inp-ppp" value="2" min="0.1" step="0.1" style="width:58px;padding:.3rem .5rem;border:1px solid #e2e8f0;border-radius:7px;font-size:.82rem">
-    <button onclick="applySettings()" style="padding:.35rem .75rem;border-radius:8px;font-size:.82rem;font-weight:500;cursor:pointer;border:none;background:#0ea5e9;color:#fff">Appliquer</button>
-    <div style="width:1px;height:20px;background:#e2e8f0;flex-shrink:0"></div>
-    <button onclick="doZoom(-0.15)" style="width:26px;height:26px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;font-size:15px">−</button>
-    <span id="zoom-label" style="font-size:.78rem;color:#718096;min-width:40px;text-align:center">100%</span>
-    <button onclick="doZoom(0.15)" style="width:26px;height:26px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;font-size:15px">+</button>
-    <button onclick="doZoom(-99)" style="padding:.35rem .65rem;border-radius:8px;font-size:.82rem;cursor:pointer;border:1px solid #e2e8f0;background:#fff">100%</button>
-    <div style="width:1px;height:20px;background:#e2e8f0;flex-shrink:0"></div>
-    <div style="position:relative;display:inline-block" id="dd-calculs">
-      <button onclick="toggleDD('dd-calculs')" style="padding:.35rem .75rem;border-radius:8px;font-size:.82rem;cursor:pointer;border:1px solid #e2e8f0;background:#fff;display:flex;align-items:center;gap:4px">Calculs <span style="font-size:.65rem;color:#718096">▾</span></button>
-      <div class="dropdown-menu" id="dd-calculs-menu">
-        <button class="dropdown-item" onclick="calcVides();closeDD()">📊 Emplacements vides</button>
-        <div class="dropdown-sep"></div>
-        <button class="dropdown-item" onclick="calcRef('K2');closeDD()">⚖️ Poids total K2</button>
-        <button class="dropdown-item" onclick="calcRef('K3');closeDD()">⚖️ Poids total K3</button>
-      </div>
-    </div>
-    <div style="width:1px;height:20px;background:#e2e8f0;flex-shrink:0"></div>
-    <button id="undoBtn" onclick="undo()" disabled style="padding:.35rem .75rem;border-radius:8px;font-size:.82rem;cursor:pointer;border:1px solid #e2e8f0;background:#fff">Annuler</button>
-    <button id="redoBtn" onclick="redo()" disabled style="padding:.35rem .75rem;border-radius:8px;font-size:.82rem;cursor:pointer;border:1px solid #e2e8f0;background:#fff">Rétablir</button>
-    <div style="width:1px;height:20px;background:#e2e8f0;flex-shrink:0"></div>
-    <button id="selModeBtn" onclick="toggleSelMode()" style="padding:.35rem .75rem;border-radius:8px;font-size:.82rem;cursor:pointer;border:1px solid #e2e8f0;background:#fff">Sélection</button>
-    <span id="selInfo" style="display:none;font-size:.75rem;color:#0ea5e9;padding:2px 8px;background:#e0f2fe;border-radius:6px"></span>
-    <div style="width:1px;height:20px;background:#e2e8f0;flex-shrink:0"></div>
-    <div style="position:relative;display:inline-block" id="dd-fichier">
-      <button onclick="toggleDD('dd-fichier')" style="padding:.35rem .75rem;border-radius:8px;font-size:.82rem;cursor:pointer;border:1px solid #e2e8f0;background:#fff;display:flex;align-items:center;gap:4px">Fichier <span style="font-size:.65rem;color:#718096">▾</span></button>
-      <div class="dropdown-menu" id="dd-fichier-menu">
-        <button class="dropdown-item" onclick="openPrint();closeDD()">🖨️ Imprimer</button>
-        <div class="dropdown-sep"></div>
-        <button class="dropdown-item" onclick="exportData();closeDD()">💾 Exporter (.json)</button>
-        <div class="dropdown-sep"></div>
-        <button class="dropdown-item" style="color:#e24b4a" onclick="resetAll();closeDD()">🗑 Tout effacer</button>
-      </div>
-    </div>
-  </div>
-      <div class="nav-parcs" id="navParcs"></div>
-      <div class="nav-zones" id="navZones"></div>
-      <div class="results" id="plan-results"><div class="res-card" id="plan-res-content"></div></div>
-      <div class="grid-wrap" id="gridWrap" style="flex:1;min-height:0">
-        <div class="grid-inner" id="gridInner">
-          <table id="grid"></table>
-        </div>
-      </div>
-      <!-- MODAL LOT -->
-<div class="overlay" id="modalLot">
-  <div class="modal">
-    <div class="modal-title" id="lot-title">Nouveau lot</div>
-    <div class="field">
-      <label>Nombre de poches</label>
-      <div style="display:flex;gap:8px;align-items:center">
-        <input type="number" id="l-poches" min="1" value="10" style="flex:1">
-        <label style="display:flex;align-items:center;gap:5px;font-size:.78rem;color:#718096;cursor:pointer;white-space:nowrap">
-          <input type="checkbox" id="l-vide" onchange="toggleVide()"> Vide
-        </label>
-      </div>
-    </div>
-    <div id="lot-detail-fields">
-    <div class="field"><label>Grammage / Référence</label><input type="text" id="l-gram" placeholder="ex: 12 ou K2"></div>
-    <div class="field"><label>Numéro de lot</label><input type="text" id="l-lot" placeholder="ex: 02S25"></div>
-    <div class="field"><label>Poids/p (kg)</label><input type="number" id="l-poids" step="0.1" placeholder="ex: 2.4"></div>
-    <div class="field"><label>Date</label><input type="date" id="l-date"></div>
-    <div class="field"><label>Notes</label><input type="text" id="l-notes" placeholder="observations"></div>
-    </div>
-    <div class="field"><label>Direction</label>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;width:120px">
-        <span></span><button type="button" class="btn" id="d-up" onclick="setDir('up')">↑</button><span></span>
-        <button type="button" class="btn" id="d-left" onclick="setDir('left')">←</button>
-        <span style="display:flex;align-items:center;justify-content:center;font-size:.7rem;color:#ccc">●</span>
-        <button type="button" class="btn" id="d-right" onclick="setDir('right')">→</button>
-        <span></span><button type="button" class="btn" id="d-down" onclick="setDir('down')">↓</button><span></span>
-      </div>
-    </div>
-    <div class="field"><label>Couleur</label><div class="swatches" id="lot-swatches"></div></div>
-    <div class="field"><label>Style texte</label>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px">
-        <select id="l-fsize"><option value="8">Petit</option><option value="10" selected>Normal</option><option value="12">Grand</option></select>
-        <select id="l-fweight"><option value="400">Normal</option><option value="700" selected>Gras</option></select>
-        <select id="l-align"><option value="left">G</option><option value="center" selected>C</option><option value="right">D</option></select>
-      </div>
-    </div>
-    <div class="field"><label>Bordure</label>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:5px">
-        <select id="l-bwidth"><option value="1">Fine</option><option value="2" selected>Normale</option><option value="3">Épaisse</option></select>
-        <select id="l-bstyle"><option value="solid">Pleine</option><option value="double" selected>Double</option><option value="dashed">Pointillée</option></select>
-      </div>
-      <input type="color" id="l-bcolor" value="#1a202c" style="width:100%;height:32px;padding:2px;border:1px solid #e2e8f0;border-radius:7px">
-    </div>
-    <div class="modal-btns">
-      <button class="btn btn-primary" onclick="saveLot()">Enregistrer</button>
-      <button class="btn btn-danger" onclick="deleteLot()" id="del-lot" style="display:none">Supprimer</button>
-      <button class="btn" onclick="closeModal('modalLot')">Annuler</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL LIBRE -->
-<div class="overlay" id="modalLibre">
-  <div class="modal">
-    <div class="modal-title">Zone libre</div>
-    <div class="info-box" id="libre-info"></div>
-    <div class="field"><label>Texte</label><input type="text" id="fr-text" placeholder="ex: Zone réservée, Accès..."></div>
-    <div class="field"><label>Couleur de fond</label><div class="swatches" id="libre-swatches"></div></div>
-    <div class="field"><label>Style texte</label>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px">
-        <select id="fr-fsize"><option value="8">Petit</option><option value="10" selected>Normal</option><option value="12">Grand</option></select>
-        <select id="fr-fweight"><option value="400">Normal</option><option value="700" selected>Gras</option></select>
-        <select id="fr-align"><option value="left">G</option><option value="center" selected>C</option><option value="right">D</option></select>
-      </div>
-    </div>
-    <div class="field"><label>Bordure</label>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:5px">
-        <select id="fr-bwidth"><option value="1">Fine</option><option value="2" selected>Normale</option><option value="3">Épaisse</option></select>
-        <select id="fr-bstyle"><option value="solid">Pleine</option><option value="double" selected>Double</option><option value="dashed">Pointillée</option></select>
-      </div>
-      <input type="color" id="fr-bcolor" value="#1a202c" style="width:100%;height:32px;padding:2px;border:1px solid #e2e8f0;border-radius:7px">
-    </div>
-    <div class="modal-btns">
-      <button class="btn btn-primary" onclick="saveLibre()">Enregistrer</button>
-      <button class="btn btn-danger" onclick="deleteLibre()" id="del-libre" style="display:none">Supprimer</button>
-      <button class="btn" onclick="closeModal('modalLibre')">Annuler</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL IMPRESSION -->
-<div class="overlay" id="modalPrint">
-  <div class="modal">
-    <div class="modal-title">Impression</div>
-    <div class="field"><label>Titre</label><input type="text" id="pr-title" value="Plan des parcs"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-      <div class="field"><label>Format</label><select id="pr-format"><option value="A4">A4</option><option value="A3" selected>A3</option></select></div>
-      <div class="field"><label>Orientation</label><select id="pr-orient"><option value="landscape" selected>Paysage</option><option value="portrait">Portrait</option></select></div>
-    </div>
-    <div class="field"><label>Colonnes (de → à)</label>
-      <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:5px;align-items:center">
-        <input type="number" id="pr-c1" value="1" min="1"><span style="text-align:center;font-size:.75rem;color:#999">→</span><input type="number" id="pr-c2" min="1">
-      </div>
-    </div>
-    <div class="field"><label>Rangées (de → à)</label>
-      <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:5px;align-items:center">
-        <input type="number" id="pr-r1" value="1" min="1"><span style="text-align:center;font-size:.75rem;color:#999">→</span><input type="number" id="pr-r2" min="1">
-      </div>
-    </div>
-    <div class="field"><label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="pr-nums" checked> Numéros colonnes/rangées</label></div>
-    <div class="field"><label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="pr-empty" checked> Quadrillage vide</label></div>
-    <div class="field" id="pr-sel-field" style="display:none"><label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="pr-sel-only"> Imprimer uniquement la sélection</label></div>
-    <div class="modal-btns">
-      <button class="btn btn-primary" onclick="doPrint()">🖨️ Lancer</button>
-      <button class="btn" onclick="closeModal('modalPrint')">Annuler</button>
-    </div>
-  </div>
-</div>
-      <div class="ctx-menu" id="ctxMenu">
-        <div class="ctx-label" id="ctxLabel"></div>
-        <button class="ctx-item" id="ctx-ins-before" onclick="ctxAction('ins-before')"></button>
-        <button class="ctx-item" id="ctx-ins-after" onclick="ctxAction('ins-after')"></button>
-        <div class="ctx-sep"></div>
-        <button class="ctx-item ctx-danger" id="ctx-delete" onclick="ctxAction('delete')"></button>
-      </div>
-      <div class="toast" id="plan-toast"></div>
-    </div>
-
-<!-- PLAN -->
-<div id="tab-plan" class="section" style="display:none;position:fixed;inset:0;z-index:40;flex-direction:column;background:#fff;overflow:hidden">
-<div class="header" style="flex-shrink:0">
-    <button onclick="showTab('dashboard')" style="padding:.35rem .75rem;border-radius:8px;font-size:.82rem;font-weight:600;cursor:pointer;border:none;background:#1e293b;color:#fff;white-space:nowrap;margin-right:4px">← Retour</button>
+    <div id="tab-plan" class="section">
+<div class="header">
   <!-- Ligne 1 : titre + recherche + paramètres grille -->
   <div style="display:flex;align-items:center;gap:10px;width:100%;flex-wrap:nowrap">
     <h1>Plan des parcs</h1>
@@ -895,6 +491,31 @@ td.blockcell.highlighted{outline:2px solid #e63946;outline-offset:-1px;z-index:2
 </div>
 
 <div class="toast" id="toast"></div>
+    </div>
+
+    <div id="tab-export" class="section">
+      <div class="card">
+        <div class="card-title">Exporter les données</div>
+        <button class="btn-action primary" onclick="exportExcel()">📥 Télécharger Excel</button>
+      </div>
+      <div class="card" style="margin-top:12px">
+        <div class="card-title">Répartition par lieu</div>
+        <div id="repartition-list"><div class="loading">Chargement…</div></div>
+      </div>
+    </div>
+
+    <div id="tab-admin" class="section">
+      <div class="card">
+        <div class="card-title">Demandes d'accès en attente</div>
+        <div id="admin-pending-list"><div class="loading">Chargement…</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Utilisateurs actifs</div>
+        <div id="admin-users-list"><div class="loading">Chargement…</div></div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div class="overlay" id="overlay-lot">
   <div class="modal">
@@ -906,7 +527,6 @@ td.blockcell.highlighted{outline:2px solid #e63946;outline-offset:-1px;z-index:2
   </div>
 </div>
 
-<!-- MODAL OPERATION -->
 <div class="overlay" id="overlay-op">
   <div class="modal">
     <div class="modal-header">
@@ -917,10 +537,9 @@ td.blockcell.highlighted{outline:2px solid #e63946;outline-offset:-1px;z-index:2
   </div>
 </div>
 
-<!-- ═══════════════════ FIREBASE + APP JS ═══════════════════ -->
 <script>
 
-var SK = 'plan_parc_kys_v1';
+var SK = 'plan_parc_kys';
 var CELL = 20;
 
 // ── ONGLETS ──
@@ -1013,21 +632,21 @@ function renderNav(){
   p.innerHTML=parcs.map(function(parc,i){
     return '<button class="parc-tab'+(i===activeParc?' active':'')+'" onclick="switchParc('+i+')" ondblclick="renameParc('+i+')">'+
       esc(parc.name)+
-      (parcs.length>1?'<span class="tab-close" onclick="event.stopPropagation();delParc('+i+')" title="Supprimer">x<\/span>':'')+
-    '<\/button>';
+      (parcs.length>1?'<span class="tab-close" onclick="event.stopPropagation();delParc('+i+')" title="Supprimer">x</span>':'')+
+    '</button>';
   }).join('')+
-  '<button class="parc-add" onclick="addParc()" title="Nouveau parc">+<\/button>';
+  '<button class="parc-add" onclick="addParc()" title="Nouveau parc">+</button>';
   // Zones (barre claire)
   var parc=curParc();
   var z=document.getElementById('navZones');
-  z.innerHTML='<span class="nav-label">'+esc(parc.name)+' :<\/span>'+
+  z.innerHTML='<span class="nav-label">'+esc(parc.name)+' :</span>'+
   parc.zones.map(function(zone,i){
     return '<button class="zone-tab'+(i===parc.activeZone?' active':'')+'" onclick="switchZone('+i+')" ondblclick="renameZone('+i+')">'+
       esc(zone.name)+
-      (parc.zones.length>1?'<span class="tab-close" onclick="event.stopPropagation();delZone('+i+')" title="Supprimer">x<\/span>':'')+
-    '<\/button>';
+      (parc.zones.length>1?'<span class="tab-close" onclick="event.stopPropagation();delZone('+i+')" title="Supprimer">x</span>':'')+
+    '</button>';
   }).join('')+
-  '<button class="zone-add" onclick="addZone()" title="Nouvelle zone">+<\/button>';
+  '<button class="zone-add" onclick="addZone()" title="Nouvelle zone">+</button>';
 }
 function renderTabs(){ renderNav(); }
 
@@ -1668,29 +1287,20 @@ function doPrint(){
   }
   tb+='</tbody>';
   var w=window.open('','_p','width=1200,height=900');
-  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+esc(title)+'<\/title><style>@page{size:'+fmt2+' '+ori+';margin:8mm}body{font-family:sans-serif;margin:0}h1{font-size:13px;margin:0 0 5px}table{border-collapse:collapse;table-layout:fixed;width:100%}td,th{padding:0;overflow:hidden;min-width:0;box-sizing:border-box}<\/style><\/head><body><h1>'+esc(title)+'<\/h1><table>'+th+tb+'<\/table><scr'+'ipt>window.onload=function(){window.print();window.close();}<\/sc'+'ript><\/body><\/html>');
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+esc(title)+'</title><style>@page{size:'+fmt2+' '+ori+';margin:8mm}body{font-family:sans-serif;margin:0}h1{font-size:13px;margin:0 0 5px}table{border-collapse:collapse;table-layout:fixed;width:100%}td,th{padding:0;overflow:hidden;min-width:0;box-sizing:border-box}<\/style><\/head><body><h1>'+esc(title)+'</h1><table>'+th+tb+'</table><\u0073cript>window.onload=function(){window.print();window.close();}<\/script><\/body><\/html>');
   w.document.close();
   closeModal('modalPrint');
 }
 
 // ── INIT ──
 
-// todayStr pour compatibilite Firebase
-function todayStr(){
-  var d=new Date();
-  return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getFullYear()).slice(2);
-}
-
-// Init differee
-window.initPlanDesParcs = function(){
-  if(!document.getElementById('navParcs'))return;
-  if(!window._planLoaded){ load(); window._planLoaded=true; }
-  renderTabs(); render();
-  if(!window._planDragDone){ setTimeout(initDrag,100); window._planDragDone=true; }
-};
+function todayStr(){var d=new Date();return d.toISOString().split('T')[0];}
+window.initPlanDesParcs=function(){if(window._planReady)return;window._planReady=true;load();renderTabs();render();setTimeout(initDrag,100);};
 
 </script>
+
 <script type="module">
+
 // ─────────────────────────────────────────────
 // 🔧 CONFIGURATION FIREBASE
 // Remplacez ces valeurs par les vôtres depuis :
@@ -2453,23 +2063,11 @@ function renderAll(){
 
 window.showTab = (name)=>{
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  const names=['dashboard','nouveau','lots','plan','export','admin'];
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  const names=['dashboard','lots','nouveau','plan','export'];
   document.querySelectorAll('.tab')[names.indexOf(name)]?.classList.add('active');
-
-  const planEl = document.getElementById('tab-plan');
-
-  if(name === 'plan'){
-    document.querySelector('.main').style.display = 'none';
-    document.querySelector('header').style.display = 'none';
-    planEl.style.display = 'flex';
-    if(window.initPlanDesParcs) window.initPlanDesParcs();
-  } else {
-    document.querySelector('.main').style.display = '';
-    document.querySelector('header').style.display = '';
-    if(planEl) planEl.style.display = 'none';
-    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-    document.getElementById('tab-'+name)?.classList.add('active');
-  }
+  document.getElementById('tab-'+name)?.classList.add('active');
+  if(name==='plan' && window.initPlanDesParcs) window.initPlanDesParcs();
 };
 
 
@@ -2488,6 +2086,8 @@ document.getElementById('login-password').addEventListener('keydown',e=>{if(e.ke
 
 
 
+
 </script>
+
 </body>
 </html>
