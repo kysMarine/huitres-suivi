@@ -116,11 +116,16 @@ td.cell{width:20px;min-width:20px;max-width:20px;height:20px;min-height:20px;max
 td.cell:hover{background:#eff6ff}
 td.cell.drag-sel{background:#bfdbfe}
 td.cell.zone-sel{background:#bbf7d0;outline:1px solid #22c55e;outline-offset:-1px}
-td.blockcell{font-size:8px;font-weight:600;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer;padding:0;vertical-align:middle}
+td.blockcell{font-size:8px;font-weight:600;overflow:visible;white-space:nowrap;text-overflow:ellipsis;cursor:pointer;padding:0;vertical-align:middle;position:relative}
 td.blockcell:hover{filter:brightness(.93)}
 td.blockcell.highlighted{outline:2px solid #e63946;outline-offset:-1px;z-index:2}
 /* Lignes toujours 20px */
 table.grid tr{height:20px;max-height:20px}
+/* Poignées de redimensionnement */
+.resize-handle{display:none;position:absolute;top:1px;width:9px;height:9px;background:#e63946;border-radius:50%;cursor:ew-resize;z-index:20;border:1.5px solid #fff}
+.resize-handle.left{left:-4px}
+.resize-handle.right{right:-4px}
+td.blockcell:hover .resize-handle{display:block}
 
 /* MODAL */
 .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:200;align-items:center;justify-content:center;padding:1rem}
@@ -1034,7 +1039,11 @@ function render(){
         var visibleCells=cells.filter(function(p){return p[0]===r;});
         var span=isVert?1:visibleCells.length;
         // Ne pas forcer width/height — les cases CSS restent 20x20px strictes
-        var inner=isVert?'<div style="writing-mode:vertical-rl;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden">'+esc(label)+'</div>':esc(label);
+        var inner = isVert
+          ? '<div style="writing-mode:vertical-rl;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden">'+esc(label)+'</div>'
+          : '<span style="overflow:hidden;text-overflow:ellipsis;display:block;padding:0 6px">'+esc(label)+'</span>'
+            +'<div class="resize-handle left" onmousedown="startResize(event,'+bi+',\'left\')" onclick="event.stopPropagation()"></div>'
+            +'<div class="resize-handle right" onmousedown="startResize(event,'+bi+',\'right\')" onclick="event.stopPropagation()"></div>';
         var spanAttr=isVert?'rowspan="'+cells.length+'"':'colspan="'+span+'"';
         html+='<td class="blockcell'+(isHL?' highlighted':'')+'" '+spanAttr+' style="'+style+'" onclick="clickBlock('+bi+')" title="'+esc(label)+'">'+inner+'</td>';
         if(isVert)c2++; else c2+=span;
@@ -1049,6 +1058,41 @@ function render(){
 
 // ── INTERACTIONS ──
 function clickBlock(bi){ openEditBlock(bi); }
+
+// ── REDIMENSIONNEMENT PAR POIGNEE ──
+var resizing = null;
+
+function startResize(e, bi, side){
+  e.preventDefault();
+  e.stopPropagation();
+  var b = curTab().blocks[bi];
+  resizing = {bi:bi, side:side, origNbcases:b.nbcases||1, origCol:b.col, startX:e.clientX};
+  document.body.style.cursor = 'ew-resize';
+  document.body.style.userSelect = 'none';
+}
+
+document.addEventListener('mousemove', function(e){
+  if(!resizing) return;
+  var b = curTab().blocks[resizing.bi];
+  if(!b) return;
+  var zoomVal = document.getElementById('grid') ? (parseFloat(document.getElementById('grid').style.zoom)||1) : 1;
+  var deltaCells = Math.round((e.clientX - resizing.startX) / (CELL * zoomVal));
+  if(resizing.side === 'right'){
+    b.nbcases = Math.max(1, resizing.origNbcases + deltaCells);
+  } else {
+    var newNb = Math.max(1, resizing.origNbcases - deltaCells);
+    var newCol = resizing.origCol + (resizing.origNbcases - newNb);
+    if(newCol >= 0 && newCol < curTab().ncols){ b.nbcases = newNb; b.col = newCol; }
+  }
+  render();
+});
+
+document.addEventListener('mouseup', function(e){
+  if(!resizing) return;
+  document.body.style.cursor = '';
+  document.body.style.userSelect = '';
+  save(); resizing = null;
+});
 
 function initDrag(){
   var grid=document.getElementById('grid');
