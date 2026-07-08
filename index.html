@@ -2094,7 +2094,7 @@ function lotCardHTML(id, l, isChild=false){
   const code = lotCode(l);
   const ops = l.historique ? Object.keys(l.historique).length : 0;
   const indent = isChild ? 'margin-left:1.5rem;border-left:3px solid var(--border);border-radius:0 8px 8px 0;' : '';
-  const numBase = (l.numero||'').split('|')[0].trim();
+  const numBase = lotCode(l).split('|')[0].trim();
   const inPlan = window.findLotInPlan && numBase ? window.findLotInPlan(numBase, true) : null;
   const planBtn = inPlan
     ? `<button onclick="event.stopPropagation();goToLotInPlan('${numBase}')" style="font-size:.72rem;padding:3px 8px;border-radius:6px;border:1px solid var(--primary);background:#e0f2fe;color:var(--primary);cursor:pointer;margin-top:4px;white-space:nowrap">🗺️ ${inPlan.parcName} › ${inPlan.zoneName}</button>`
@@ -2234,7 +2234,7 @@ window.openLot = (id)=>{
   const hist=histoArr(lot).reverse();
   const OPS=[['Criblage','🔬'],['Calibrage','📏'],['Dédobulage','✂️'],['Déplacement','📍'],['Remise à l\'eau','💧']];
   // Chercher dans le plan par numéro, puis par lieu si non trouvé
-  const numBase = (lot.numero||'').split('|')[0].trim();
+  const numBase = lotCode(lot).split('|')[0].trim();
   const inPlan = window.findLotInPlan && numBase ? window.findLotInPlan(numBase, true) : null;
   const lieuStr = lot.lieuActuel||'';
   const planBtn = inPlan
