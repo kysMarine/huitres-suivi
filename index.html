@@ -194,10 +194,10 @@ table.grid tr{height:20px;max-height:20px}
 
 /* Plan dans onglet */
 #tab-plan.active{display:flex;flex-direction:column;margin:-1.5rem;height:calc(100vh - 110px);overflow:hidden}
-#tab-plan .header{flex-shrink:0;position:relative;padding-left:1rem}
-#tab-plan .nav-parcs{flex-shrink:0;padding-left:.5rem}
-#tab-plan .nav-zones{flex-shrink:0;padding-left:.5rem}
-#tab-plan .results{flex-shrink:0}
+#tab-plan .header{flex-shrink:0;position:relative;padding-left:1.5rem !important}
+#tab-plan .nav-parcs{flex-shrink:0;padding-left:1.5rem}
+#tab-plan .nav-zones{flex-shrink:0;padding-left:1.5rem}
+#tab-plan .results{flex-shrink:0;padding-left:1.5rem}
 #tab-plan .grid-wrap{flex:1;min-height:0}
 </style>
 </head>
@@ -447,7 +447,7 @@ table.grid tr{height:20px;max-height:20px}
         </label>
       </div>
       <div class="field">
-        <label>Nombre de cases <span style="font-size:.72rem;color:#94a3b8" id="lot-cases-info"></span></label>
+        <label>Nombre de poches <span style="font-size:.72rem;color:#94a3b8" id="lot-cases-info"></span></label>
         <input type="number" id="l-poches" min="1" value="1" style="width:100%">
       </div>
       <div id="lot-detail-fields">
@@ -585,7 +585,7 @@ var parcs = [];
 var activeParc = 0;
 var nextId = 1;
 
-function newZone(name){ return {id:nextId++, name:name, ncols:100, nrows:30, ppp:2, blocks:[]}; }
+function newZone(name){ return {id:nextId++, name:name, ncols:100, nrows:30, blocks:[]}; }
 function newParc(name){ return {id:nextId++, name:name, zones:[newZone('Zone 1')], activeZone:0}; }
 function curParc(){ return parcs[activeParc]; }
 function curTab(){ var p=curParc(); return p.zones[p.activeZone]; }
@@ -1095,7 +1095,7 @@ function openBloc(r, c, nb, tab, bi){
 
   // Remplir champs
   var nbcases = editing.nbcases || 1;
-  document.getElementById('lot-cases-info').textContent = '(' + nbcases + ' case' + (nbcases>1?'s':'') + ')';
+  document.getElementById('lot-cases-info').textContent = '';
   document.getElementById('l-poches').value = b ? (b.poches||nbcases) : nbcases;
   document.getElementById('l-gram').value = b ? (b.gram||'') : '';
   document.getElementById('l-lot').value = b ? (b.lot||'') : '';
@@ -1176,7 +1176,7 @@ function saveBloc(){
   };
   if(isLot){
     data.vide = isVide;
-    data.poches = data.nbcases;
+    data.poches = parseInt(document.getElementById('l-poches').value)||nbcases;
     data.gram = isVide ? 'v' : document.getElementById('l-gram').value.trim();
     data.lot = isVide ? '' : document.getElementById('l-lot').value.trim();
     data.poids = isVide ? '' : document.getElementById('l-poids').value;
@@ -1332,7 +1332,7 @@ function importData(e){
       } else {
         // ancien format
         var t=curTab();
-        t.ncols=d.ncols||100;t.nrows=d.nrows||30;t.ppp=d.ppp||2;t.blocks=d.blocks||[];
+        t.ncols=d.ncols||100;t.nrows=d.nrows||30;t.blocks=d.blocks||[];
       }
       syncInputs();save();renderTabs();render();toast('Import réussi');
     }catch(err){alert('Fichier invalide.');}
