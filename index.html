@@ -639,18 +639,59 @@ function undo(){ if(histIdx<=0)return;histIdx--;applySnap(stateHist[histIdx]);up
 function redo(){ if(histIdx>=stateHist.length-1)return;histIdx++;applySnap(stateHist[histIdx]);updHistBtns();toast('Retabli'); }
 function updHistBtns(){ document.getElementById('undoBtn').disabled=histIdx<=0;document.getElementById('redoBtn').disabled=histIdx>=stateHist.length-1; }
 
-// ── PERSISTANCE ──
-function save(skip){ localStorage.setItem(SK,snap());if(!skip)pushHist(); }
+// ── PERSISTANCE FIREBASE ──
+function planFbRef(){
+  if(window._fbDb && window._fbRef) return window._fbRef(window._fbDb, 'plan_parcs');
+  return null;
+}
+
+function save(skip){
+  if(!skip) pushHist();
+  var r = planFbRef();
+  if(r && window._fbSet){
+    // Firebase ne supporte pas les Set/undefined — on passe JSON propre
+    window._fbSet(r, JSON.parse(snap()));
+  } else {
+    // Fallback localStorage
+    localStorage.setItem(SK, snap());
+  }
+}
+
 function load(){
-  try{
-    var d=JSON.parse(localStorage.getItem(SK)||'{}');
-    if(d.parcs&&d.parcs.length){
-      parcs=d.parcs;activeParc=d.activeParc||0;nextId=d.nextId||100;
-    } else {
-      parcs=[newParc('Parc 1')];activeParc=0;
-    }
-  }catch(e){ parcs=[newParc('Parc 1')];activeParc=0; }
-  syncInputs();pushHist();
+  var r = planFbRef();
+  if(r && window._fbOnValue){
+    // Ecoute temps réel Firebase
+    window._fbOnValue(r, function(snapshot){
+      var d = snapshot.val();
+      if(d && d.parcs && d.parcs.length){
+        parcs = d.parcs;
+        activeParc = d.activeParc || 0;
+        nextId = d.nextId || 100;
+      } else {
+        parcs = [newParc('Parc 1')];
+        activeParc = 0;
+      }
+      syncInputs();
+      if(!window._planRendered){
+        window._planRendered = true;
+        pushHist();
+        renderNav();
+        render();
+      } else {
+        renderNav();
+        render();
+      }
+    });
+  } else {
+    // Fallback localStorage si Firebase pas encore dispo
+    try{
+      var d = JSON.parse(localStorage.getItem(SK)||'{}');
+      if(d.parcs&&d.parcs.length){ parcs=d.parcs; activeParc=d.activeParc||0; nextId=d.nextId||100; }
+      else{ parcs=[newParc('Parc 1')]; activeParc=0; }
+    }catch(e){ parcs=[newParc('Parc 1')]; activeParc=0; }
+    syncInputs();
+    pushHist();
+  }
 }
 function syncInputs(){
   var t=curTab();
@@ -1411,7 +1452,13 @@ function doPrint(){
 // ── INIT ──
 
 function todayStr(){var d=new Date();return d.toISOString().split('T')[0];}
-window.initPlanDesParcs=function(){if(window._planReady)return;window._planReady=true;load();renderTabs();render();setTimeout(initDrag,100);};
+window.initPlanDesParcs=function(){
+  if(window._planReady)return;
+  window._planReady=true;
+  window._planRendered=false;
+  load(); // Firebase onValue ou localStorage
+  setTimeout(initDrag,100);
+};
 
 // ── LIEN LOTS FIREBASE → PLAN ──
 window.findLotInPlan = function(numero, firstOnly){
@@ -1516,6 +1563,12 @@ if(configReady){
   app = initializeApp(FIREBASE_CONFIG);
   auth = getAuth(app);
   db = getDatabase(app);
+  // Exposer pour le script plan (non-module)
+  window._fbDb = db;
+  window._fbRef = ref;
+  window._fbSet = set;
+  window._fbGet = get;
+  window._fbOnValue = onValue;
 }
 
 // --- TAT ---
