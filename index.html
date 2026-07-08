@@ -660,16 +660,59 @@ function save(skip){
 function load(){
   var r = planFbRef();
   if(r && window._fbOnValue){
-    // Ecoute temps réel Firebase
     window._fbOnValue(r, function(snapshot){
       var d = snapshot.val();
       if(d && d.parcs && d.parcs.length){
+        // Données Firebase existantes
         parcs = d.parcs;
         activeParc = d.activeParc || 0;
         nextId = d.nextId || 100;
+        // Firebase supprime les tableaux vides — on les remet
+        parcs.forEach(function(p){
+          if(!p.zones) p.zones = [newZone('Zone 1')];
+          p.zones.forEach(function(z){ if(!z.blocks) z.blocks = []; });
+          if(p.activeZone===undefined) p.activeZone = 0;
+        });
       } else {
-        parcs = [newParc('Parc 1')];
-        activeParc = 0;
+        // Pas de données Firebase — chercher dans localStorage (migration)
+        var migrated = null;
+        var keys = ['plan_parc_v4','plan_parc_kys','plan_parc_v3','plan_parc_test_v2'];
+        for(var i=0;i<keys.length;i++){
+          try{
+            var raw = localStorage.getItem(keys[i]);
+            if(raw){
+              var old = JSON.parse(raw);
+              if(old.parcs && old.parcs.length){ migrated = old; break; }
+              // Ancien format avec tabs
+              if(old.tabs && old.tabs.length){
+                // Convertir tabs -> parcs
+                migrated = {
+                  parcs: old.tabs.map(function(t){
+                    return {id:nextId++, name:t.name||'Parc', zones:[{
+                      id:nextId++, name:'Zone 1',
+                      ncols:t.ncols||100, nrows:t.nrows||30,
+                      blocks:t.blocks||[]
+                    }], activeZone:0};
+                  }),
+                  activeParc: old.activeTab||0,
+                  nextId: nextId
+                };
+                break;
+              }
+            }
+          }catch(e){}
+        }
+        if(migrated){
+          parcs = migrated.parcs;
+          activeParc = migrated.activeParc || 0;
+          nextId = migrated.nextId || nextId;
+          // Sauvegarder vers Firebase
+          if(window._fbSet) window._fbSet(r, JSON.parse(JSON.stringify({parcs:parcs,activeParc:activeParc,nextId:nextId})));
+          toast('Données migrées vers Firebase !');
+        } else {
+          parcs = [newParc('Parc 1')];
+          activeParc = 0;
+        }
       }
       syncInputs();
       if(!window._planRendered){
@@ -683,7 +726,7 @@ function load(){
       }
     });
   } else {
-    // Fallback localStorage si Firebase pas encore dispo
+    // Fallback localStorage
     try{
       var d = JSON.parse(localStorage.getItem(SK)||'{}');
       if(d.parcs&&d.parcs.length){ parcs=d.parcs; activeParc=d.activeParc||0; nextId=d.nextId||100; }
@@ -942,7 +985,8 @@ function bcells(b){
 }
 function occ(){
   var m={};
-  curTab().blocks.forEach(function(b,bi){ bcells(b).forEach(function(p){ m[p[0]+'_'+p[1]]=bi; }); });
+  var blocks=curTab().blocks||[];
+  blocks.forEach(function(b,bi){ bcells(b).forEach(function(p){ m[p[0]+'_'+p[1]]=bi; }); });
   return m;
 }
 function blabel(b){
@@ -1262,13 +1306,13 @@ function doSearch(){
   if(!val){clearSearch();return;}
   highlighted=[];
   // D'abord chercher en EXACT
-  curTab().blocks.forEach(function(b,bi){
+  (curTab().blocks||[]).forEach(function(b,bi){
     if(b.type==='lot'&&b.lot&&b.lot.trim().toLowerCase()===val.toLowerCase())
       highlighted.push(bi);
   });
   // Si rien, chercher en partiel
   if(!highlighted.length){
-    curTab().blocks.forEach(function(b,bi){
+    (curTab().blocks||[]).forEach(function(b,bi){
       if(b.type==='lot'&&b.lot&&b.lot.toLowerCase().includes(val.toLowerCase()))
         highlighted.push(bi);
     });
@@ -1329,7 +1373,7 @@ function clearSearch(){
 
 function calcVides(){
   var idx=[];
-  curTab().blocks.forEach(function(b,bi){
+  (curTab().blocks||[]).forEach(function(b,bi){
     var fields=[b.lot,b.gram,b.text];
     if(fields.some(function(f){if(!f)return false;var v=String(f).trim().toLowerCase();return v==='v'||/^\d*\s*v$/.test(v);}))idx.push(bi);
   });
@@ -1342,7 +1386,7 @@ function calcVides(){
 
 function calcRef(ref){
   var idx=[];
-  curTab().blocks.forEach(function(b,bi){if(b.type==='lot'&&b.gram&&String(b.gram).trim().toUpperCase()===ref.toUpperCase())idx.push(bi);});
+  (curTab().blocks||[]).forEach(function(b,bi){if(b.type==='lot'&&b.gram&&String(b.gram).trim().toUpperCase()===ref.toUpperCase())idx.push(bi);});
   if(!idx.length){showRes('Aucune case '+esc(ref)+' trouvée.');return;}
   var totP=0,totKg=0;
   var rows=idx.map(function(bi){
