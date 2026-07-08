@@ -284,8 +284,25 @@ table.grid tr{height:20px;max-height:20px}
         <input type="text" id="search" placeholder="Rechercher un lot…" oninput="renderLots()">
         <select id="filter-lieu" onchange="renderLots()">
           <option value="">Tous les lieux</option>
-          <option>Riantec</option><option>Carnac</option><option>Locmariaquer</option>
-          <option>Etel</option><option>St Helene</option><option>Blaver</option><option>Golf</option>
+          <optgroup label="Riantec"><option>Riantec</option></optgroup>
+          <optgroup label="Carnac">
+            <option value="Carnac">Carnac (général)</option>
+            <option value="Carnac > St Co">St Co</option>
+            <option value="Carnac > Postic Fond">Postic Fond</option>
+            <option value="Carnac > Postic Haut">Postic Haut</option>
+            <option value="Carnac > NR">NR</option>
+            <option value="Carnac > VR">VR</option>
+          </optgroup>
+          <optgroup label="Locmariaquer">
+            <option value="Locmariaquer">Locmariaquer (général)</option>
+            <option value="Locmariaquer > Echo">Echo</option>
+            <option value="Locmariaquer > Leica">Leica</option>
+            <option value="Locmariaquer > Collabo">Collabo</option>
+          </optgroup>
+          <option>Etel</option>
+          <option>St Helene</option>
+          <option>Blaver</option>
+          <option>Golf</option>
         </select>
       </div>
       <div id="lots-list"><div class="loading">Chargement…</div></div>
@@ -302,8 +319,25 @@ table.grid tr{height:20px;max-height:20px}
           <div class="field-inline"><label>Origine</label><input type="text" id="n-origine" placeholder="ex: Bretagne Nord"></div>
           <div class="field-inline"><label>Lieu initial</label>
             <select id="n-lieu">
-              <option>Riantec</option><option>Carnac</option><option>Locmariaquer</option>
-              <option>Etel</option><option>St Helene</option><option>Blaver</option><option>Golf</option>
+              <option>Riantec</option>
+              <optgroup label="Carnac">
+                <option value="Carnac">Carnac (général)</option>
+                <option value="Carnac > St Co">St Co</option>
+                <option value="Carnac > Postic Fond">Postic Fond</option>
+                <option value="Carnac > Postic Haut">Postic Haut</option>
+                <option value="Carnac > NR">NR</option>
+                <option value="Carnac > VR">VR</option>
+              </optgroup>
+              <optgroup label="Locmariaquer">
+                <option value="Locmariaquer">Locmariaquer (général)</option>
+                <option value="Locmariaquer > Echo">Echo</option>
+                <option value="Locmariaquer > Leica">Leica</option>
+                <option value="Locmariaquer > Collabo">Collabo</option>
+              </optgroup>
+              <option>Etel</option>
+              <option>St Helene</option>
+              <option>Blaver</option>
+              <option>Golf</option>
             </select>
           </div>
         </div>
@@ -1691,7 +1725,6 @@ window.openOp = (type)=>{
   let html = `<div class="field-inline" style="margin-bottom:12px"><label>Date</label><input type="date" id="op-date" value="${todayStr()}"></div>`;
 
   if(type==='Criblage'){
-    const lieuOptions = LIEUX.map(l=>`<option value="${l}">${l}</option>`).join('');
     html+=`
     <p style="font-size:.8rem;color:var(--text2);margin-bottom:10px">Cochez les fractions obtenues, choisissez leur lieu de destination et une note qualité optionnelle.</p>
     <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:10px">
@@ -1730,12 +1763,12 @@ window.openOp = (type)=>{
 
   if(type==='Déplacement'){
     html+=`<div class="field-inline"><label>Nouveau lieu</label><select id="op-lieu">
-      ${LIEUX.filter(l=>l!==lot.lieuActuel).map(l=>`<option>${l}</option>`).join('')}
+      ${lieuOptions(null,false).replace(`<option value="${lot.lieuActuel}"`,`<option value="${lot.lieuActuel}" style="display:none"`)}
     </select></div>`;
   }
   if(type==='Remise à l\'eau'){
     html+=`<div class="field-inline"><label>Lieu de remise à l'eau</label><select id="op-lieu">
-      ${LIEUX.map(l=>`<option ${l===lot.lieuActuel?'selected':''}>${l}</option>`).join('')}
+      ${lieuOptions(lot.lieuActuel,false)}
     </select></div>`;
   }
   html+=`<div class="field-inline"><label>Notes</label><textarea id="op-notes" rows="2" placeholder="Observations…"></textarea></div>`;
@@ -1875,9 +1908,7 @@ window.openEditLot = (id)=>{
       <input type="text" id="edit-origine" value="${lot.origine||''}">
     </div>
     <div class="field-inline"><label>Lieu actuel</label>
-      <select id="edit-lieu">
-        ${LIEUX.map(l=>`<option value="${l}" ${l===lot.lieuActuel?'selected':''}>${l}</option>`).join('')}
-      </select>
+      <select id="edit-lieu">${lieuOptions(lot.lieuActuel,false)}</select>
     </div>
     <div class="field-inline"><label>Date d'entrée</label>
       <input type="date" id="edit-date" value="${lot.dateEntree||''}">
@@ -1912,15 +1943,55 @@ window.saveEditLot = async (id)=>{
 
 
 // --- CONSTANTES ---
-const LIEUX = ['Riantec','Carnac','Locmariaquer','Etel','St Helene','Blaver','Golf'];
-const LIEU_BADGE = {
-  'Riantec':'b-blue','Carnac':'b-teal','Locmariaquer':'b-amber',
-  'Etel':'b-coral','St Helene':'b-purple','Blaver':'b-gray','Golf':'b-pink'
+// Structure hiérarchique des lieux
+const LIEUX_TREE = {
+  'Riantec':     {color:'b-blue',   sous:[]},
+  'Carnac':      {color:'b-teal',   sous:['St Co','Postic Fond','Postic Haut','NR','VR']},
+  'Locmariaquer':{color:'b-amber',  sous:['Echo','Leica','Collabo']},
+  'Etel':        {color:'b-coral',  sous:[]},
+  'St Helene':   {color:'b-purple', sous:[]},
+  'Blaver':      {color:'b-gray',   sous:[]},
+  'Golf':        {color:'b-pink',   sous:[]},
 };
 
+// Liste plate de tous les lieux + sous-lieux pour filtres et LIEUX array
+const LIEUX = Object.keys(LIEUX_TREE);
+const TOUS_LIEUX = LIEUX.flatMap(l => [l, ...LIEUX_TREE[l].sous.map(s => l+' > '+s)]);
+
+// Badger avec couleur du lieu parent + sous-lieu
 function lieuBadge(lieu){
-  return `<span class="badge ${LIEU_BADGE[lieu]||'b-gray'}">${lieu}</span>`;
+  if(!lieu) return '';
+  // Trouver le parent si c'est un sous-lieu
+  var parts = lieu.split(' > ');
+  var parent = parts[0];
+  var sous = parts[1]||null;
+  var colorClass = (LIEUX_TREE[parent]&&LIEUX_TREE[parent].color)||'b-gray';
+  var label = sous ? `${parent} <span style="opacity:.7;font-size:.65rem">› ${sous}</span>` : parent;
+  return `<span class="badge ${colorClass}" style="display:inline-flex;align-items:center;gap:3px">${label}</span>`;
 }
+
+// Générer les options HTML avec optgroups
+function lieuOptions(selected, includeAll){
+  var html = includeAll ? '<option value="">Tous les lieux</option>' : '';
+  Object.entries(LIEUX_TREE).forEach(([lieu, cfg])=>{
+    if(cfg.sous.length === 0){
+      html += `<option value="${lieu}" ${selected===lieu?'selected':''}>${lieu}</option>`;
+    } else {
+      html += `<optgroup label="${lieu}">`;
+      html += `<option value="${lieu}" ${selected===lieu?'selected':''}>${lieu} (général)</option>`;
+      cfg.sous.forEach(s=>{
+        var val = lieu+' > '+s;
+        html += `<option value="${val}" ${selected===val?'selected':''}>${s}</option>`;
+      });
+      html += '</optgroup>';
+    }
+  });
+  return html;
+}
+
+const LIEU_BADGE = Object.fromEntries(
+  Object.entries(LIEUX_TREE).map(([k,v])=>[k,v.color])
+);
 
 function histoArr(lot){
   if(!lot.historique) return [];
@@ -1999,7 +2070,7 @@ function renderLots(){
 
   const filteredParents = parents.filter(([id,l])=>{
     const mq=!q||(l.numero||'').toLowerCase().includes(q)||(l.origine||'').toLowerCase().includes(q);
-    const ml=!fl||l.lieuActuel===fl;
+    const ml=!fl||l.lieuActuel===fl||l.lieuActuel.startsWith(fl+' > ')||fl.startsWith(l.lieuActuel+' > ');
     const childMatch = children.filter(([cid,cl])=>(cl.numero||'').startsWith((l.numero||'')+'-'));
     const childMl = childMatch.some(([cid,cl])=>!fl||cl.lieuActuel===fl);
     return mq&&(ml||childMl);
@@ -2011,7 +2082,7 @@ function renderLots(){
   if(!filteredParents.length){
     const orphans = children.filter(([id,l])=>{
       const mq=!q||(l.numero||'').toLowerCase().includes(q)||(l.origine||'').toLowerCase().includes(q);
-      const ml=!fl||l.lieuActuel===fl;
+      const ml=!fl||l.lieuActuel===fl||l.lieuActuel.startsWith(fl+' > ')||fl.startsWith(l.lieuActuel+' > ');
       return mq&&ml;
     });
     if(!orphans.length){ll.innerHTML='<div class="empty">Aucun lot trouvé.</div>';return;}
