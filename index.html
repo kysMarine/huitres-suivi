@@ -194,8 +194,9 @@ table.grid tr{height:20px;max-height:20px}
 
 /* Plan dans onglet */
 #tab-plan.active{display:flex;flex-direction:column;margin:-1.5rem;height:calc(100vh - 110px);overflow:hidden}
-#tab-plan .header{flex-shrink:0;position:relative}
-#tab-plan .nav-parcs,#tab-plan .nav-zones{flex-shrink:0}
+#tab-plan .header{flex-shrink:0;position:relative;padding-left:1rem}
+#tab-plan .nav-parcs{flex-shrink:0;padding-left:.5rem}
+#tab-plan .nav-zones{flex-shrink:0;padding-left:.5rem}
 #tab-plan .results{flex-shrink:0}
 #tab-plan .grid-wrap{flex:1;min-height:0}
 </style>
@@ -1219,9 +1220,56 @@ function doSearch(){
   var val=document.getElementById('inp-search').value.trim();
   if(!val){clearSearch();return;}
   highlighted=[];
-  curTab().blocks.forEach(function(b,bi){if(b.type==='lot'&&b.lot===val)highlighted.push(bi);});
-  var tot=highlighted.reduce(function(s,bi){return s+(parseInt(curTab().blocks[bi].poches)||0);},0);
-  showRes('<strong>'+esc(val)+'</strong> — '+highlighted.length+' bloc'+(highlighted.length>1?'s':'')+' — <strong>'+tot+' poches</strong>');
+  // Cherche correspondance partielle sur numéro de lot (insensible à la casse)
+  curTab().blocks.forEach(function(b,bi){
+    if(b.type==='lot'&&b.lot&&b.lot.toLowerCase().includes(val.toLowerCase()))
+      highlighted.push(bi);
+  });
+  if(!highlighted.length){showRes('<strong>'+esc(val)+'</strong> — aucun résultat.');render();return;}
+
+  // Grouper par grammage/référence
+  var groups={};
+  highlighted.forEach(function(bi){
+    var b=curTab().blocks[bi];
+    var g=b.gram?String(b.gram).trim():'Sans référence';
+    if(!groups[g]) groups[g]={indices:[],totP:0,totKg:0};
+    var p=parseInt(b.nbcases)||parseInt(b.poches)||0;
+    var kg=parseFloat(b.poids)||0;
+    groups[g].indices.push(bi);
+    groups[g].totP+=p;
+    groups[g].totKg+=kg?+(p*kg):0;
+  });
+
+  var totP=highlighted.reduce(function(s,bi){return s+(parseInt(curTab().blocks[bi].nbcases)||0);},0);
+  var totKg=Object.values(groups).reduce(function(s,g){return s+g.totKg;},0);
+
+  // Construire le HTML des groupes
+  var html='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">';
+  html+='<strong>'+esc(val)+' — '+highlighted.length+' bloc'+(highlighted.length>1?'s':'')+' — '+totP+' poches'+(totKg?(' — '+totKg.toFixed(1)+' kg total'):'')+'</strong>';
+  html+='<button class="btn" onclick="highlighted='+JSON.stringify(highlighted)+';render()">Tout sélectionner</button></div>';
+
+  Object.entries(groups).forEach(function(entry){
+    var g=entry[0]; var grp=entry[1];
+    html+='<div style="margin-bottom:8px;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden">';
+    html+='<div style="background:#f8f9fa;padding:5px 10px;font-size:.78rem;font-weight:600;display:flex;justify-content:space-between">';
+    html+='<span>'+esc(g)+'</span>';
+    html+='<span>'+grp.totP+'p'+(grp.totKg?' — '+grp.totKg.toFixed(1)+'kg':'')+'</span></div>';
+    html+='<table style="width:100%"><tr><th>Lot</th><th>Cases</th><th>Poids/p</th><th>Total</th></tr>';
+    html+=grp.indices.map(function(bi){
+      var b=curTab().blocks[bi];
+      var p=parseInt(b.nbcases)||parseInt(b.poches)||0;
+      var kg=parseFloat(b.poids)||0;
+      var tot=kg?+(p*kg).toFixed(1):0;
+      return '<tr onclick="highlighted=['+bi+'];render()" style="cursor:pointer">'
+        +'<td>'+esc(b.lot||'—')+'</td>'
+        +'<td>'+p+'p</td>'
+        +'<td>'+(kg?kg+'kg':'—')+'</td>'
+        +'<td>'+(tot?tot+'kg':'—')+'</td></tr>';
+    }).join('');
+    html+='</table></div>';
+  });
+
+  showRes(html);
   render();
 }
 
@@ -1380,22 +1428,53 @@ window.findLotInPlan = function(numero, firstOnly){
   return null;
 };
 
-window.goToLotInPlan = function(numero){
-  var result=window.findLotInPlan(numero,true);
-  if(!result){alert('Lot "'+numero+'" introuvable dans le plan des parcs.');return;}
-  window.showTab('plan');
-  if(window.initPlanDesParcs) window.initPlanDesParcs();
-  activeParc=result.parcIdx;
-  parcs[activeParc].activeZone=result.zoneIdx;
-  highlighted=result.blockIndices;
-  syncInputs();renderTabs();render();
-  setTimeout(function(){
-    var b=parcs[activeParc].zones[result.zoneIdx].blocks[result.blockIndices[0]];
-    if(b){
-      var el=document.querySelector('td.blockcell.highlighted');
-      if(el) el.scrollIntoView({behavior:'smooth',block:'center',inline:'center'});
+// Chercher un parc/zone dans le plan par nom de lieu Firebase
+window.findParcByLieu = function(lieuActuel){
+  if(!parcs||!lieuActuel) return null;
+  var parts = lieuActuel.split(' > ');
+  var parcName = parts[0].trim();
+  var zoneName = parts[1] ? parts[1].trim() : null;
+  for(var pi=0;pi<parcs.length;pi++){
+    // Correspondance partielle insensible à la casse sur le nom du parc
+    if(parcs[pi].name.toLowerCase().indexOf(parcName.toLowerCase())>=0 ||
+       parcName.toLowerCase().indexOf(parcs[pi].name.toLowerCase())>=0){
+      var p = parcs[pi];
+      // Chercher la zone si précisée
+      if(zoneName){
+        for(var zi=0;zi<p.zones.length;zi++){
+          if(p.zones[zi].name.toLowerCase().indexOf(zoneName.toLowerCase())>=0 ||
+             zoneName.toLowerCase().indexOf(p.zones[zi].name.toLowerCase())>=0){
+            return {parcIdx:pi, parcName:p.name, zoneIdx:zi, zoneName:p.zones[zi].name, blockIndices:[]};
+          }
+        }
+      }
+      return {parcIdx:pi, parcName:p.name, zoneIdx:p.activeZone, zoneName:p.zones[p.activeZone].name, blockIndices:[]};
     }
-  },200);
+  }
+  return null;
+};
+
+window.goToLotInPlan = function(numero, lieuActuel){
+  if(window.initPlanDesParcs) window.initPlanDesParcs();
+  // 1. Chercher par numéro de lot dans les blocs
+  var result = window.findLotInPlan(numero, true);
+  // 2. Si pas trouvé, naviguer par lieu Firebase
+  if(!result && lieuActuel) result = window.findParcByLieu(lieuActuel);
+  if(!result){
+    window.showTab('plan');
+    return;
+  }
+  window.showTab('plan');
+  activeParc = result.parcIdx;
+  parcs[activeParc].activeZone = result.zoneIdx;
+  highlighted = result.blockIndices;
+  syncInputs(); renderTabs(); render();
+  if(result.blockIndices.length > 0){
+    setTimeout(function(){
+      var el = document.querySelector('td.blockcell.highlighted');
+      if(el) el.scrollIntoView({behavior:'smooth', block:'center', inline:'center'});
+    }, 200);
+  }
 };
 
 </script>
@@ -2151,12 +2230,15 @@ window.openLot = (id)=>{
   document.getElementById('modal-lot-title').textContent='Lot '+lot.numero;
   const hist=histoArr(lot).reverse();
   const OPS=[['Criblage','🔬'],['Calibrage','📏'],['Dédobulage','✂️'],['Déplacement','📍'],['Remise à l\'eau','💧']];
-  // Chercher dans le plan
+  // Chercher dans le plan par numéro, puis par lieu si non trouvé
   const numBase = lot.numero ? lot.numero.split('|')[0].trim() : '';
   const inPlan = window.findLotInPlan && numBase ? window.findLotInPlan(numBase, true) : null;
+  const lieuEncode = encodeURIComponent(lot.lieuActuel||'');
   const planBtn = inPlan
-    ? `<button class="btn-action primary" onclick="closeModal('overlay-lot');goToLotInPlan('${numBase}')">🗺️ Voir sur le plan — ${inPlan.parcName} › ${inPlan.zoneName}</button>`
-    : `<button class="btn-action" onclick="closeModal('overlay-lot');showTab('plan')" style="color:#94a3b8">🗺️ Ouvrir le plan</button>`;
+    ? `<button class="btn-action primary" onclick="closeModal('overlay-lot');goToLotInPlan('${numBase}','${lot.lieuActuel||''}')">🗺️ Voir sur le plan — ${inPlan.parcName} › ${inPlan.zoneName}</button>`
+    : (lot.lieuActuel
+        ? `<button class="btn-action primary" onclick="closeModal('overlay-lot');goToLotInPlan('${numBase}','${lot.lieuActuel||''}')">🗺️ Aller dans le plan — ${lot.lieuActuel}</button>`
+        : `<button class="btn-action" onclick="closeModal('overlay-lot');showTab('plan')" style="color:#94a3b8">🗺️ Ouvrir le plan</button>`);
   document.getElementById('modal-lot-body').innerHTML=`
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem;font-size:.82rem">
       <div><span style="color:var(--text2)">Origine</span><br><strong>${lot.origine||'—'}</strong></div>
