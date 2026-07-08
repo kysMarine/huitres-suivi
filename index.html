@@ -1220,11 +1220,18 @@ function doSearch(){
   var val=document.getElementById('inp-search').value.trim();
   if(!val){clearSearch();return;}
   highlighted=[];
-  // Cherche correspondance partielle sur numéro de lot (insensible à la casse)
+  // D'abord chercher en EXACT
   curTab().blocks.forEach(function(b,bi){
-    if(b.type==='lot'&&b.lot&&b.lot.toLowerCase().includes(val.toLowerCase()))
+    if(b.type==='lot'&&b.lot&&b.lot.trim().toLowerCase()===val.toLowerCase())
       highlighted.push(bi);
   });
+  // Si rien, chercher en partiel
+  if(!highlighted.length){
+    curTab().blocks.forEach(function(b,bi){
+      if(b.type==='lot'&&b.lot&&b.lot.toLowerCase().includes(val.toLowerCase()))
+        highlighted.push(bi);
+    });
+  }
   if(!highlighted.length){showRes('<strong>'+esc(val)+'</strong> — aucun résultat.');render();return;}
 
   // Grouper par grammage/référence
@@ -2229,11 +2236,11 @@ window.openLot = (id)=>{
   // Chercher dans le plan par numéro, puis par lieu si non trouvé
   const numBase = lot.numero ? lot.numero.split('|')[0].trim() : '';
   const inPlan = window.findLotInPlan && numBase ? window.findLotInPlan(numBase, true) : null;
-  const lieuEncode = encodeURIComponent(lot.lieuActuel||'');
+  const lieuStr = lot.lieuActuel||'';
   const planBtn = inPlan
-    ? `<button class="btn-action primary" onclick="closeModal('overlay-lot');goToLotInPlan('${numBase}','${lot.lieuActuel||''}')">🗺️ Voir sur le plan — ${inPlan.parcName} › ${inPlan.zoneName}</button>`
-    : (lot.lieuActuel
-        ? `<button class="btn-action primary" onclick="closeModal('overlay-lot');goToLotInPlan('${numBase}','${lot.lieuActuel||''}')">🗺️ Aller dans le plan — ${lot.lieuActuel}</button>`
+    ? `<button class="btn-action primary" onclick="closeModal('overlay-lot');goToLotInPlan('${numBase}','${lieuStr}')">🗺️ Voir sur le plan — ${inPlan.parcName} › ${inPlan.zoneName}</button>`
+    : (lieuStr
+        ? `<button class="btn-action primary" onclick="closeModal('overlay-lot');goToLotInPlan('${numBase}','${lieuStr}')">🗺️ Aller dans le plan — ${lieuStr}</button>`
         : `<button class="btn-action" onclick="closeModal('overlay-lot');showTab('plan')" style="color:#94a3b8">🗺️ Ouvrir le plan</button>`);
   document.getElementById('modal-lot-body').innerHTML=`
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem;font-size:.82rem">
