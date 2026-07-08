@@ -1076,19 +1076,24 @@ function startResize(e, bi, side){
 }
 
 document.addEventListener('mousemove', function(e){
-  if(!resizing) return;
-  var b = curTab().blocks[resizing.bi];
-  if(!b) return;
-  var zoomVal = document.getElementById('grid') ? (parseFloat(document.getElementById('grid').style.zoom)||1) : 1;
-  var deltaCells = Math.round((e.clientX - resizing.startX) / (CELL * zoomVal));
-  if(resizing.side === 'right'){
-    b.nbcases = Math.max(1, resizing.origNbcases + deltaCells);
-  } else {
-    var newNb = Math.max(1, resizing.origNbcases - deltaCells);
-    var newCol = resizing.origCol + (resizing.origNbcases - newNb);
-    if(newCol >= 0 && newCol < curTab().ncols){ b.nbcases = newNb; b.col = newCol; }
+  // Tracker position souris (pour Ctrl+C/V)
+  window._mouseX=e.clientX;
+  window._mouseY=e.clientY;
+  // Resize bloc
+  if(resizing){
+    var b = curTab().blocks[resizing.bi];
+    if(!b) return;
+    var zoomVal = document.getElementById('grid') ? (parseFloat(document.getElementById('grid').style.zoom)||1) : 1;
+    var deltaCells = Math.round((e.clientX - resizing.startX) / (CELL * zoomVal));
+    if(resizing.side === 'right'){
+      b.nbcases = Math.max(1, resizing.origNbcases + deltaCells);
+    } else {
+      var newNb = Math.max(1, resizing.origNbcases - deltaCells);
+      var newCol = resizing.origCol + (resizing.origNbcases - newNb);
+      if(newCol >= 0 && newCol < curTab().ncols){ b.nbcases = newNb; b.col = newCol; }
+    }
+    render();
   }
-  render();
 });
 
 document.addEventListener('mouseup', function(e){
@@ -1205,11 +1210,6 @@ function initDrag(){
         toast('Survolez une case vide pour coller');
       }
     }
-  });
-  // Tracker la position de la souris pour Ctrl+V
-  document.addEventListener('mousemove',function(e){
-    window._mouseX=e.clientX;
-    window._mouseY=e.clientY;
   });
 }
 
@@ -1464,13 +1464,32 @@ function calcVides(){
   var idx=[];
   (curTab().blocks||[]).forEach(function(b,bi){
     var fields=[b.lot,b.gram,b.text];
-    if(fields.some(function(f){if(!f)return false;var v=String(f).trim().toLowerCase();return v==='v'||/^\d*\s*v$/.test(v);}))idx.push(bi);
+    if(b.vide||fields.some(function(f){if(!f)return false;var v=String(f).trim().toLowerCase();return v==='v'||/^\d*\s*v$/.test(v);}))idx.push(bi);
   });
   if(!idx.length){showRes('Aucun emplacement vide détecté.');return;}
-  var tot=idx.reduce(function(s,bi){return s+(parseInt(curTab().blocks[bi].poches)||parseInt(curTab().blocks[bi].nbcases)||0);},0);
+
+  var totPoches=idx.reduce(function(s,bi){return s+(parseInt(curTab().blocks[bi].poches)||0);},0);
+
   highlighted=idx;render();
-  var rows=idx.map(function(bi){return '<tr onclick="highlighted=['+bi+'];render()"><td>L'+(curTab().blocks[bi].row+1)+'</td><td>'+(curTab().blocks[bi].poches||curTab().blocks[bi].nbcases||0)+'p</td></tr>';}).join('');
-  showRes('<div style="display:flex;align-items:center;justify-content:space-between"><strong>'+idx.length+' emplacement'+(idx.length>1?'s':'')+' vide — '+tot+' poches</strong><button class="btn" onclick="highlighted='+JSON.stringify(idx)+';render()">Tout sélectionner</button></div><table><tr><th>Rangée</th><th>Poches</th></tr>'+rows+'</table>');
+
+  var rows=idx.map(function(bi){
+    var b=curTab().blocks[bi];
+    var p=parseInt(b.poches)||0;
+    return '<tr onclick="highlighted=['+bi+'];planRender ? planRender() : render()" style="cursor:pointer;hover:background:#f0f9ff">'
+      +'<td>L'+(b.row+1)+' col '+(b.col+1)+'</td>'
+      +'<td style="text-align:right;font-weight:600">'+p+'p</td>'
+      +'</tr>';
+  }).join('');
+
+  showRes(
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+    +'<strong onclick="highlighted='+JSON.stringify(idx)+';render()" style="cursor:pointer" title="Cliquer pour tout sélectionner">'
+    +idx.length+' vide'+(idx.length>1?'s':'')+' — <span style="color:#e24b4a">'+totPoches+' poches</span>'
+    +'</strong>'
+    +'<button class="btn" onclick="highlighted='+JSON.stringify(idx)+';render()">Tout sélectionner</button>'
+    +'</div>'
+    +'<table><tr><th style="text-align:left">Position</th><th style="text-align:right">Poches</th></tr>'+rows+'</table>'
+  );
 }
 
 function calcRef(ref){
