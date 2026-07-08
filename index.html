@@ -457,8 +457,9 @@ td.blockcell:hover .resize-handle{display:block}
       </div>
       <div id="lot-detail-fields">
         <div class="field"><label>Grammage / Référence</label><input type="text" id="l-gram" placeholder="ex: K2, 23g"></div>
-        <div class="field"><label>Numéro de lot</label><input type="text" id="l-lot" placeholder="ex: 18M26"></div>
+        <div class="field"><label>Numéro de lot</label><input type="text" id="l-lot" placeholder="ex: 18M26" oninput="this.value=this.value.toUpperCase()"></div>
         <div class="field"><label>Poids/p (kg)</label><input type="number" id="l-poids" step="0.1" placeholder="ex: 2.4"></div>
+        <div class="field"><label>Bêtes/p</label><input type="number" id="l-betes" step="1" placeholder="ex: 200"></div>
         <div class="field"><label>Date</label><input type="date" id="l-date"></div>
         <div class="field"><label>Notes</label><input type="text" id="l-notes" placeholder="observations"></div>
       </div>
@@ -998,9 +999,11 @@ function blabel(b){
   var p=[b.poches+'p'];
   if(b.gram)p.push(gram(b.gram));
   if(b.lot)p.push(b.lot);
-  if(b.poids)p.push(b.poids+'kg');
-  if(b.date)p.push(fmt(b.date));
-  return p.join(' ');
+  var details=[];
+  if(b.poids)details.push(b.poids+'kg/p');
+  if(b.betes)details.push(b.betes+'u/p');
+  if(b.date)details.push(fmt(b.date));
+  return p.join(' ')+(details.length?' - '+details.join(' - '):'');
 }
 
 // ── RENDER ──
@@ -1035,6 +1038,7 @@ function render(){
         var fs=b.fsize||'10'; var fw=b.fweight||'700'; var ta=b.align||'center';
         var bw=b.bwidth||'2'; var bs2=b.bstyle||'double'; var bc=b.bcolor||'#1a202c';
         var style='background:'+b.color+'55;border:'+bw+'px '+bs2+' '+bc+';color:'+darken(b.color)+';font-size:'+fs+'px;font-weight:'+fw+';text-align:'+ta+';overflow:hidden;white-space:nowrap;text-overflow:ellipsis';
+        if(isVert) style+=';height:'+( cells.length*CELL)+'px;max-height:'+(cells.length*CELL)+'px;width:'+CELL+'px;max-width:'+CELL+'px';
         if(isHL)style+=';outline:2px solid #e63946;outline-offset:-2px;z-index:2';
         var visibleCells=cells.filter(function(p){return p[0]===r;});
         var span=isVert?1:visibleCells.length;
@@ -1268,6 +1272,7 @@ function openBloc(r, c, nb, tab, bi){
   document.getElementById('l-gram').value = b ? (b.gram||'') : '';
   document.getElementById('l-lot').value = b ? (b.lot||'') : '';
   document.getElementById('l-poids').value = b ? (b.poids||'') : '';
+  document.getElementById('l-betes').value = b ? (b.betes||'') : '';
   document.getElementById('l-date').value = b ? (b.date||today()) : today();
   document.getElementById('l-notes').value = b ? (b.notes||'') : '';
   var isVide = b ? !!b.vide : false;
@@ -1346,8 +1351,9 @@ function saveBloc(){
     data.vide = isVide;
     data.poches = parseInt(document.getElementById('l-poches').value)||nbcases;
     data.gram = isVide ? 'v' : document.getElementById('l-gram').value.trim();
-    data.lot = isVide ? '' : document.getElementById('l-lot').value.trim();
+    data.lot = isVide ? '' : document.getElementById('l-lot').value.trim().toUpperCase();
     data.poids = isVide ? '' : document.getElementById('l-poids').value;
+    data.betes = isVide ? '' : document.getElementById('l-betes').value;
     data.date = isVide ? '' : document.getElementById('l-date').value;
     data.notes = isVide ? '' : document.getElementById('l-notes').value.trim();
   } else {
