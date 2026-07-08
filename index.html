@@ -1123,6 +1123,45 @@ function initDrag(){
     if((e.ctrlKey||e.metaKey)&&e.key==='z'){e.preventDefault();undo();}
     if((e.ctrlKey||e.metaKey)&&(e.key==='y'||(e.shiftKey&&e.key==='Z'))){e.preventDefault();redo();}
     if(e.key==='Escape'&&selMode){toggleSelMode();}
+    // Ctrl+C : copier le bloc sous la souris
+    if((e.ctrlKey||e.metaKey)&&e.key==='c'){
+      var el=document.elementFromPoint(window._mouseX||0,window._mouseY||0);
+      if(el&&el.classList.contains('blockcell')){
+        // Trouver le bloc via onclick
+        var onclick=el.getAttribute('onclick')||'';
+        var m=onclick.match(/clickBlock\((\d+)\)/);
+        if(m){
+          var bi=parseInt(m[1]);
+          window._copiedBlock=JSON.parse(JSON.stringify(curTab().blocks[bi]));
+          toast('Bloc copié — Ctrl+V pour coller');
+          e.preventDefault();
+        }
+      }
+    }
+    // Ctrl+V : coller le bloc copié à la position de la souris
+    if((e.ctrlKey||e.metaKey)&&e.key==='v'&&window._copiedBlock){
+      e.preventDefault();
+      var el=document.elementFromPoint(window._mouseX||0,window._mouseY||0);
+      var td=el&&(el.dataset.r!==undefined?el:null);
+      if(!td&&el)td=el.closest('td[data-r]');
+      if(td&&td.dataset.r!==undefined){
+        var r=parseInt(td.dataset.r);
+        var c=parseInt(td.dataset.c);
+        var newBlock=JSON.parse(JSON.stringify(window._copiedBlock));
+        newBlock.row=r;
+        newBlock.col=c;
+        curTab().blocks.push(newBlock);
+        save();render();
+        toast('Bloc collé en L'+(r+1)+' col '+(c+1));
+      } else {
+        toast('Survolez une case vide pour coller');
+      }
+    }
+  });
+  // Tracker la position de la souris pour Ctrl+V
+  document.addEventListener('mousemove',function(e){
+    window._mouseX=e.clientX;
+    window._mouseY=e.clientY;
   });
 }
 
