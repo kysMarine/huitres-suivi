@@ -1456,56 +1456,21 @@ window.findParcByLieu = function(lieuActuel){
 
 window.goToLotInPlan = function(numero, lieuActuel){
   if(window.initPlanDesParcs) window.initPlanDesParcs();
-  // 1. Chercher par numéro de lot dans les blocs
+  // Naviguer vers le bon parc/zone
   var result = window.findLotInPlan(numero, true);
-  // 2. Si pas trouvé, naviguer par lieu Firebase
   if(!result && lieuActuel) result = window.findParcByLieu(lieuActuel);
-  if(!result){
-    window.showTab('plan');
-    return;
+  if(result){
+    activeParc = result.parcIdx;
+    parcs[activeParc].activeZone = result.zoneIdx;
+    syncInputs(); renderTabs();
   }
   window.showTab('plan');
-  activeParc = result.parcIdx;
-  parcs[activeParc].activeZone = result.zoneIdx;
-  syncInputs(); renderTabs();
-
-  // Lancer la recherche par numéro dans la zone cible pour surligner en rouge
-  if(numero){
-    highlighted = [];
-    parcs[activeParc].zones[result.zoneIdx].blocks.forEach(function(b,bi){
-      if(b.type==='lot' && b.lot && b.lot.toLowerCase().includes(numero.toLowerCase()))
-        highlighted.push(bi);
-    });
-    // Si pas trouvé par lot exact, surligner tous les blocs non-vides de la zone
-    render();
-
-    // Afficher le résultat dans le panneau de recherche
-    if(highlighted.length > 0){
-      var totP = highlighted.reduce(function(s,bi){
-        return s + (parseInt(parcs[activeParc].zones[result.zoneIdx].blocks[bi].poches)||0);
-      }, 0);
-      // Remplir la barre de recherche
-      var inp = document.getElementById('inp-search');
-      if(inp) inp.value = numero;
-      // Afficher le résumé
-      var resHtml = '<strong>'+esc(numero)+'</strong> — '+highlighted.length+' bloc'+(highlighted.length>1?'s':'')+' — <strong>'+totP+' poches</strong>';
-      showRes(resHtml);
-      // Scroll vers le premier bloc
-      setTimeout(function(){
-        var el = document.querySelector('td.blockcell.highlighted');
-        if(el) el.scrollIntoView({behavior:'smooth', block:'center', inline:'center'});
-      }, 200);
-    } else {
-      render();
-      setTimeout(function(){
-        var el = document.querySelector('td.blockcell.highlighted');
-        if(el) el.scrollIntoView({behavior:'smooth', block:'center', inline:'center'});
-      }, 200);
-    }
-  } else {
-    highlighted = result.blockIndices;
-    render();
-  }
+  // Remplir la barre de recherche et lancer comme si l'utilisateur l'avait tapé
+  setTimeout(function(){
+    var inp = document.getElementById('inp-search');
+    if(inp){ inp.value = numero; }
+    doSearch();
+  }, 150);
 };
 
 </script>
