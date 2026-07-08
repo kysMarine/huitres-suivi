@@ -116,9 +116,11 @@ td.cell{width:20px;min-width:20px;max-width:20px;height:20px;min-height:20px;max
 td.cell:hover{background:#eff6ff}
 td.cell.drag-sel{background:#bfdbfe}
 td.cell.zone-sel{background:#bbf7d0;outline:1px solid #22c55e;outline-offset:-1px}
-td.blockcell{font-size:8px;font-weight:600;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer}
+td.blockcell{font-size:8px;font-weight:600;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer;padding:0;vertical-align:middle}
 td.blockcell:hover{filter:brightness(.93)}
 td.blockcell.highlighted{outline:2px solid #e63946;outline-offset:-1px;z-index:2}
+/* Lignes toujours 20px */
+table.grid tr{height:20px;max-height:20px}
 
 /* MODAL */
 .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:200;align-items:center;justify-content:center;padding:1rem}
@@ -282,8 +284,8 @@ td.blockcell.highlighted{outline:2px solid #e63946;outline-offset:-1px;z-index:2
         <input type="text" id="search" placeholder="Rechercher un lot…" oninput="renderLots()">
         <select id="filter-lieu" onchange="renderLots()">
           <option value="">Tous les lieux</option>
-          <option Riantec</option><option>Carnac</option><option>Locmariaquer</option>
-          <option>Etel</option><option St Helene</option><option>Blaver</option><option>Golf</option>
+          <option>Riantec</option><option>Carnac</option><option>Locmariaquer</option>
+          <option>Etel</option><option>St Helene</option><option>Blaver</option><option>Golf</option>
         </select>
       </div>
       <div id="lots-list"><div class="loading">Chargement…</div></div>
@@ -300,8 +302,8 @@ td.blockcell.highlighted{outline:2px solid #e63946;outline-offset:-1px;z-index:2
           <div class="field-inline"><label>Origine</label><input type="text" id="n-origine" placeholder="ex: Bretagne Nord"></div>
           <div class="field-inline"><label>Lieu initial</label>
             <select id="n-lieu">
-              <option Riantec</option><option>Carnac</option><option>Locmariaquer</option>
-              <option>Etel</option><option St Helene</option><option>Blaver</option><option>Golf</option>
+              <option>Riantec</option><option>Carnac</option><option>Locmariaquer</option>
+              <option>Etel</option><option>St Helene</option><option>Blaver</option><option>Golf</option>
             </select>
           </div>
         </div>
@@ -404,14 +406,14 @@ td.blockcell.highlighted{outline:2px solid #e63946;outline-offset:-1px;z-index:2
 
     <!-- PANNEAU LOT -->
     <div id="bloc-lot-panel">
+      <div class="field" style="margin-bottom:8px">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.82rem;color:#718096">
+          <input type="checkbox" id="l-vide" onchange="toggleVide()"> Emplacement vide
+        </label>
+      </div>
       <div class="field">
         <label>Nombre de cases <span style="font-size:.72rem;color:#94a3b8" id="lot-cases-info"></span></label>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input type="number" id="l-poches" min="1" value="1" style="flex:1">
-          <label style="display:flex;align-items:center;gap:5px;font-size:.78rem;color:#718096;cursor:pointer;white-space:nowrap">
-            <input type="checkbox" id="l-vide" onchange="toggleVide()"> Vide
-          </label>
-        </div>
+        <input type="number" id="l-poches" min="1" value="1" style="width:100%">
       </div>
       <div id="lot-detail-fields">
         <div class="field"><label>Grammage / Référence</label><input type="text" id="l-gram" placeholder="ex: K2, 23g"></div>
@@ -849,8 +851,9 @@ function doZoom(d){
 }
 
 // ── BLOCS ──
+// bspan = nombre de cases occupées = nbcases, toujours
 function bpx(b){ return Math.max(CELL,(b.nbcases||1)*CELL); }
-function bspan(b){ return Math.max(1,Math.min(500,Math.ceil(bpx(b)/CELL))); }
+function bspan(b){ return Math.max(1, b.nbcases||1); }
 function bcells(b){
   var span=bspan(b),cells=[];
   for(var i=0;i<span;i++){
@@ -910,9 +913,7 @@ function render(){
         if(isHL)style+=';outline:2px solid #e63946;outline-offset:-2px;z-index:2';
         var visibleCells=cells.filter(function(p){return p[0]===r;});
         var span=isVert?1:visibleCells.length;
-        var w=isVert?CELL:span*CELL;
-        var h=isVert?cells.length*CELL:CELL;
-        style+=';width:'+w+'px;max-width:'+w+'px;height:'+h+'px;max-height:'+h+'px';
+        // Ne pas forcer width/height — les cases CSS restent 20x20px strictes
         var inner=isVert?'<div style="writing-mode:vertical-rl;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden">'+esc(label)+'</div>':esc(label);
         var spanAttr=isVert?'rowspan="'+cells.length+'"':'colspan="'+span+'"';
         html+='<td class="blockcell'+(isHL?' highlighted':'')+'" '+spanAttr+' style="'+style+'" onclick="clickBlock('+bi+')" title="'+esc(label)+'">'+inner+'</td>';
@@ -1095,10 +1096,15 @@ function openBloc(r, c, nb, tab, bi){
   // Bouton supprimer
   document.getElementById('del-bloc').style.display = isNew ? 'none' : 'inline-block';
   document.getElementById('modalBloc').classList.add('open');
+  // Focus automatique sur le champ poches
+  setTimeout(function(){ 
+    var p = document.getElementById('l-poches');
+    if(p){ p.focus(); p.select(); }
+  }, 50);
 }
 
 function openNewLot(r, c){ openBloc(r, c, 1, 'lot', undefined); }
-function openNewLibre(r, c, nb){ openBloc(r, c, nb, 'libre', undefined); }
+function openNewLibre(r, c, nb){ openBloc(r, c, nb, 'lot', undefined); }  // Lot en premier aussi pour drag
 function openEditBlock(bi){ var b=curTab().blocks[bi]; openBloc(b.row, b.col, b.nbcases||1, b.type, bi); }
 
 function toggleVide(){
@@ -1120,12 +1126,12 @@ function saveBloc(){
   if(!editing) return;
   var isLot = currentBlocTab === 'lot';
   var isVide = isLot && document.getElementById('l-vide').checked;
-  var nbcases = editing.nbcases || 1;
+  var nbcases = editing.nbcases || 1;  // toujours les cases sélectionnées
   var data = {
     type: isLot ? 'lot' : 'libre',
     row: editing.row, col: editing.col,
     dir: selDir, color: selColor,
-    nbcases: isLot ? parseInt(document.getElementById('l-poches').value)||nbcases : nbcases,
+    nbcases: nbcases,  // taille = cases sélectionnées, fixe
     fsize: document.getElementById('b-fsize').value,
     fweight: document.getElementById('b-fweight').value,
     align: document.getElementById('b-align').value,
@@ -2074,6 +2080,12 @@ window.openLot = (id)=>{
   document.getElementById('modal-lot-title').textContent='Lot '+lot.numero;
   const hist=histoArr(lot).reverse();
   const OPS=[['Criblage','🔬'],['Calibrage','📏'],['Dédobulage','✂️'],['Déplacement','📍'],['Remise à l\'eau','💧']];
+  // Chercher dans le plan
+  const numBase = lot.numero ? lot.numero.split('|')[0].trim() : '';
+  const inPlan = window.findLotInPlan && numBase ? window.findLotInPlan(numBase, true) : null;
+  const planBtn = inPlan
+    ? `<button class="btn-action primary" onclick="closeModal('overlay-lot');goToLotInPlan('${numBase}')">🗺️ Voir sur le plan — ${inPlan.parcName} › ${inPlan.zoneName}</button>`
+    : `<button class="btn-action" onclick="closeModal('overlay-lot');showTab('plan')" style="color:#94a3b8">🗺️ Ouvrir le plan</button>`;
   document.getElementById('modal-lot-body').innerHTML=`
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem;font-size:.82rem">
       <div><span style="color:var(--text2)">Origine</span><br><strong>${lot.origine||'—'}</strong></div>
@@ -2081,6 +2093,7 @@ window.openLot = (id)=>{
       <div><span style="color:var(--text2)">Année</span><br><strong>${lot.annee}</strong></div>
       <div><span style="color:var(--text2)">Quantité</span><br><strong>${lot.quantite?lot.quantite+(lot.unite?' '+lot.unite:''):'—'}</strong></div>
     </div>
+    <div style="margin-bottom:1rem">${planBtn}</div>
     <div style="margin-bottom:1rem">
       <div style="font-size:.82rem;font-weight:500;margin-bottom:8px;color:var(--text2)">Ajouter une opération</div>
       <div class="op-grid">${OPS.map(([op,ic])=>`<button class="op-btn" onclick="openOp('${op}')">${ic} ${op}</button>`).join('')}</div>
@@ -2127,6 +2140,10 @@ function renderAll(){
   renderLots();
   renderExport();
 }
+
+// Exposer globalement pour les oninput/onchange HTML
+window.renderLots = renderLots;
+window.filterLots = renderLots; // alias
 
 window.showTab = (name)=>{
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
