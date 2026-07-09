@@ -1179,25 +1179,25 @@ function initDrag(){
     // Ctrl+C : copier le bloc sous la souris
     if((e.ctrlKey||e.metaKey)&&e.key==='c'){
       var el=document.elementFromPoint(window._mouseX||0,window._mouseY||0);
-      if(el&&el.classList.contains('blockcell')){
-        // Trouver le bloc via onclick
-        var onclick=el.getAttribute('onclick')||'';
-        var m=onclick.match(/clickBlock\((\d+)\)/);
-        if(m){
-          var bi=parseInt(m[1]);
-          window._copiedBlock=JSON.parse(JSON.stringify(curTab().blocks[bi]));
-          toast('Bloc copié — Ctrl+V pour coller');
-          e.preventDefault();
+      if(el){
+        var td=el.classList&&el.classList.contains('blockcell') ? el : el.closest&&el.closest('.blockcell');
+        if(td){
+          var onclick=td.getAttribute('onclick')||'';
+          var m=onclick.match(/clickBlock\((\d+)\)/);
+          if(m){
+            var bi=parseInt(m[1]);
+            window._copiedBlock=JSON.parse(JSON.stringify(curTab().blocks[bi]));
+            toast('Bloc copié — Ctrl+V pour coller');
+            e.preventDefault();
+          }
         }
       }
     }
-    // Ctrl+V : coller le bloc copié à la position de la souris
     if((e.ctrlKey||e.metaKey)&&e.key==='v'&&window._copiedBlock){
       e.preventDefault();
       var el=document.elementFromPoint(window._mouseX||0,window._mouseY||0);
-      var td=el&&(el.dataset.r!==undefined?el:null);
-      if(!td&&el)td=el.closest('td[data-r]');
-      if(td&&td.dataset.r!==undefined){
+      var td=el&&(el.dataset&&el.dataset.r!==undefined ? el : el.closest&&el.closest('td[data-r]'));
+      if(td&&td.dataset&&td.dataset.r!==undefined){
         var r=parseInt(td.dataset.r);
         var c=parseInt(td.dataset.c);
         var newBlock=JSON.parse(JSON.stringify(window._copiedBlock));
@@ -1414,19 +1414,19 @@ function doSearch(){
     var b=curTab().blocks[bi];
     var g=b.gram?String(b.gram).trim():'Sans référence';
     if(!groups[g]) groups[g]={indices:[],totP:0,totKg:0};
-    var p=parseInt(b.nbcases)||parseInt(b.poches)||0;
+    var p=parseInt(b.poches)||0;
     var kg=parseFloat(b.poids)||0;
     groups[g].indices.push(bi);
     groups[g].totP+=p;
-    groups[g].totKg+=kg?+(p*kg):0;
+    groups[g].totKg+=kg ? p*kg : 0;
   });
 
-  var totP=highlighted.reduce(function(s,bi){return s+(parseInt(curTab().blocks[bi].nbcases)||0);},0);
+  var totP=highlighted.reduce(function(s,bi){return s+(parseInt(curTab().blocks[bi].poches)||0);},0);
   var totKg=Object.values(groups).reduce(function(s,g){return s+g.totKg;},0);
 
   // Construire le HTML des groupes
   var html='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">';
-  html+='<strong>'+esc(val)+' — '+highlighted.length+' bloc'+(highlighted.length>1?'s':'')+' — '+totP+' poches'+(totKg?(' — '+totKg.toFixed(1)+' kg total'):'')+'</strong>';
+  html+='<strong>'+esc(val)+' — '+highlighted.length+' bloc'+(highlighted.length>1?'s':'')+' — '+totP+' poches'+(totKg?(' — <span style="color:#0ea5e9">'+totKg.toFixed(1)+' kg total</span>'):'')+'</strong>';
   html+='<button class="btn" onclick="highlighted='+JSON.stringify(highlighted)+';render()">Tout sélectionner</button></div>';
 
   Object.entries(groups).forEach(function(entry){
@@ -1434,18 +1434,18 @@ function doSearch(){
     html+='<div style="margin-bottom:8px;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden">';
     html+='<div style="background:#f8f9fa;padding:5px 10px;font-size:.78rem;font-weight:600;display:flex;justify-content:space-between">';
     html+='<span>'+esc(g)+'</span>';
-    html+='<span>'+grp.totP+'p'+(grp.totKg?' — '+grp.totKg.toFixed(1)+'kg':'')+'</span></div>';
-    html+='<table style="width:100%"><tr><th>Lot</th><th>Cases</th><th>Poids/p</th><th>Total</th></tr>';
+    html+='<span>'+grp.totP+'p'+(grp.totKg?' — '+grp.totKg.toFixed(1)+'kg total':'')+'</span></div>';
+    html+='<table style="width:100%"><tr><th style="text-align:left">Lot</th><th style="text-align:right">Poches</th><th style="text-align:right">Poids/p</th><th style="text-align:right">Total</th></tr>';
     html+=grp.indices.map(function(bi){
       var b=curTab().blocks[bi];
-      var p=parseInt(b.nbcases)||parseInt(b.poches)||0;
+      var p=parseInt(b.poches)||0;
       var kg=parseFloat(b.poids)||0;
-      var tot=kg?+(p*kg).toFixed(1):0;
+      var tot=kg ? +(p*kg).toFixed(1) : 0;
       return '<tr onclick="highlighted=['+bi+'];render()" style="cursor:pointer">'
         +'<td>'+esc(b.lot||'—')+'</td>'
-        +'<td>'+p+'p</td>'
-        +'<td>'+(kg?kg+'kg':'—')+'</td>'
-        +'<td>'+(tot?tot+'kg':'—')+'</td></tr>';
+        +'<td style="text-align:right">'+p+'p</td>'
+        +'<td style="text-align:right">'+(kg?kg+'kg/p':'—')+'</td>'
+        +'<td style="text-align:right;font-weight:600">'+(tot?tot+'kg':'—')+'</td></tr>';
     }).join('');
     html+='</table></div>';
   });
