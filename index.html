@@ -143,7 +143,11 @@ td.blockcell:hover .resize-handle{display:block}
 .info-box{background:#e0f2fe;border:1px solid #bae6fd;border-radius:7px;padding:.4rem .7rem;font-size:.75rem;color:#075985;margin-bottom:9px;display:none}
 
 /* RESULTATS */
-.results{padding:.75rem 1.25rem;background:#fff;border-bottom:1px solid #e2e8f0;display:none;flex-shrink:0}
+.results{background:#fff;border-bottom:1px solid #e2e8f0;display:none;flex-shrink:0;max-height:220px;overflow-y:auto;position:relative}
+.results.open{display:block}
+.results-header{display:flex;align-items:center;justify-content:space-between;padding:.5rem 1.25rem;cursor:pointer;position:sticky;top:0;background:#fff;z-index:2;border-bottom:1px solid #f1f5f9}
+.results-header:hover{background:#f8f9fa}
+.results-body{padding:.5rem 1.25rem .75rem}
 .results.open{display:block}
 .res-card{font-size:.82rem}
 .res-card table{width:100%;border-collapse:collapse;margin-top:8px}
@@ -307,7 +311,7 @@ td.blockcell:hover .resize-handle{display:block}
           </optgroup>
           <option>Etel</option>
           <option>St Helene</option>
-          <option>Blaver</option>
+          <option>Blavet</option>
           <option>Golf</option>
         </select>
       </div>
@@ -342,13 +346,21 @@ td.blockcell:hover .resize-handle{display:block}
               </optgroup>
               <option>Etel</option>
               <option>St Helene</option>
-              <option>Blaver</option>
+              <option>Blavet</option>
               <option>Golf</option>
             </select>
           </div>
         </div>
         <div class="form-row">
-          <div class="field-inline"><label>Quantité</label><input type="number" id="n-qte" placeholder="ex: 500"></div>
+          <div class="field-inline"><label>Quantité</label>
+              <div style="display:flex;gap:6px;align-items:center">
+                <input type="number" id="n-qte" placeholder="ex: 500" style="flex:1">
+                <select id="n-unite" style="padding:.4rem .6rem;border:1px solid var(--border);border-radius:8px;font-size:.85rem;background:var(--surface);color:var(--text)">
+                  <option value="Nombres">Nombres</option>
+                  <option value="Kg">Kg</option>
+                </select>
+              </div>
+            </div>
           <div class="field-inline"><label>Date d'entrée</label><input type="date" id="n-date"></div>
         </div>
         <div class="field-inline" style="max-width:900px"><label>Notes</label><textarea id="n-notes" rows="2" placeholder="Observations…"></textarea></div>
@@ -385,6 +397,8 @@ td.blockcell:hover .resize-handle{display:block}
         <div class="dropdown-sep"></div>
         <button class="dropdown-item" onclick="calcRef('K2');closeDD()">⚖️ Poids total K2</button>
         <button class="dropdown-item" onclick="calcRef('K3');closeDD()">⚖️ Poids total K3</button>
+        <div class="dropdown-sep"></div>
+        <button class="dropdown-item" onclick="calcByDate();closeDD()">📅 Trier par date</button>
       </div>
     </div>
     <div class="sep"></div>
@@ -408,7 +422,13 @@ td.blockcell:hover .resize-handle{display:block}
   </div>
 </div>
 
-<div class="results" id="results"><div class="res-card" id="res-content"></div></div>
+<div class="results" id="results">
+  <div class="results-header" onclick="toggleResults()">
+    <span id="results-summary" style="font-size:.82rem;font-weight:500"></span>
+    <span id="results-toggle" style="font-size:.75rem;color:#718096">▼ Réduire</span>
+  </div>
+  <div class="results-body" id="res-content"></div>
+</div>
 
 <!-- ONGLETS -->
 <div class="nav-parcs" id="navParcs"></div>
@@ -1460,6 +1480,43 @@ function clearSearch(){
   render();
 }
 
+function calcByDate(){
+  var blocks = (curTab().blocks||[]);
+  var lots = blocks
+    .map(function(b,bi){ return {bi:bi, b:b}; })
+    .filter(function(x){ return x.b.type==='lot' && x.b.date && !x.b.vide; })
+    .sort(function(a,b2){ return a.b.date.localeCompare(b2.b.date); });
+
+  if(!lots.length){ showRes('Aucun lot avec date trouvé.'); return; }
+
+  highlighted = lots.map(function(x){ return x.bi; });
+  render();
+
+  var rows = lots.map(function(x){
+    var b=x.b; var bi=x.bi;
+    var p=parseInt(b.poches)||0;
+    var kg=parseFloat(b.poids)||0;
+    var tot=kg?+(p*kg).toFixed(1):0;
+    return '<tr onclick="highlighted=['+bi+'];render()" style="cursor:pointer">'
+      +'<td>'+fmt(b.date)+'</td>'
+      +'<td>'+esc(b.lot||'—')+'</td>'
+      +'<td>'+esc(b.gram?gram(b.gram):'—')+'</td>'
+      +'<td style="text-align:right">'+p+'p</td>'
+      +'<td style="text-align:right">'+(tot?tot+'kg':'—')+'</td>'
+      +'</tr>';
+  }).join('');
+
+  showRes(
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+    +'<strong>'+lots.length+' lot'+(lots.length>1?'s':'')+' triés par date</strong>'
+    +'<button class="btn" onclick="highlighted='+JSON.stringify(highlighted)+';render()">Tout sélectionner</button>'
+    +'</div>'
+    +'<table style="width:100%">'
+    +'<tr><th style="text-align:left">Date</th><th style="text-align:left">Lot</th><th style="text-align:left">Gram.</th><th style="text-align:right">Poches</th><th style="text-align:right">Total</th></tr>'
+    +rows+'</table>'
+  );
+}
+
 function calcVides(){
   var idx=[];
   (curTab().blocks||[]).forEach(function(b,bi){
@@ -1506,9 +1563,25 @@ function calcRef(ref){
   showRes('<div style="display:flex;align-items:center;justify-content:space-between"><strong>'+esc(ref)+' — '+totP+' poches — '+totKg.toFixed(1)+' kg</strong><button class="btn" onclick="highlighted='+JSON.stringify(idx)+';render()">Tout sélectionner</button></div><table><tr><th>Lot</th><th>Poches</th><th>Poids/p</th><th>Total</th></tr>'+rows+'</table>');
 }
 
+var resultsCollapsed = false;
 function showRes(html){
+  var summary = html.replace(/<[^>]+>/g,'').slice(0,80);
+  var sumEl = document.getElementById('results-summary');
+  if(sumEl) sumEl.textContent = summary;
   document.getElementById('res-content').innerHTML=html;
   document.getElementById('results').classList.add('open');
+  resultsCollapsed = false;
+  var tog = document.getElementById('results-toggle');
+  var body = document.getElementById('res-content');
+  if(tog){ tog.textContent='▼ Réduire'; }
+  if(body){ body.style.display='block'; }
+}
+function toggleResults(){
+  resultsCollapsed = !resultsCollapsed;
+  var tog = document.getElementById('results-toggle');
+  var body = document.getElementById('res-content');
+  if(tog) tog.textContent = resultsCollapsed ? '▶ Développer' : '▼ Réduire';
+  if(body) body.style.display = resultsCollapsed ? 'none' : 'block';
 }
 
 // ── RESET / EXPORT / IMPORT ──
@@ -2021,19 +2094,19 @@ window.openOp = (type)=>{
       <div style="display:grid;grid-template-columns:auto 1fr 1fr 70px;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid var(--border)">
         <input type="checkbox" id="cb-tete" style="width:18px;height:18px;margin-right:8px">
         <label for="cb-tete" style="font-size:.85rem;font-weight:500">⬆ Tête de lot</label>
-        <select id="lieu-tete" style="font-size:.8rem;padding:4px 6px">${lieuOptions}</select>
+        <select id="lieu-tete" style="font-size:.8rem;padding:4px 6px">${lieuOptions(null,false)}</select>
         <input type="number" id="note-tete" min="0" max="20" step="0.5" placeholder="—" style="width:60px;padding:4px 6px;font-size:.8rem;border:1px solid var(--border);border-radius:6px">
       </div>
       <div style="display:grid;grid-template-columns:auto 1fr 1fr 70px;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid var(--border)">
         <input type="checkbox" id="cb-coeur" style="width:18px;height:18px;margin-right:8px">
         <label for="cb-coeur" style="font-size:.85rem;font-weight:500">◉ Cœur de lot</label>
-        <select id="lieu-coeur" style="font-size:.8rem;padding:4px 6px">${lieuOptions}</select>
+        <select id="lieu-coeur" style="font-size:.8rem;padding:4px 6px">${lieuOptions(null,false)}</select>
         <input type="number" id="note-coeur" min="0" max="20" step="0.5" placeholder="—" style="width:60px;padding:4px 6px;font-size:.8rem;border:1px solid var(--border);border-radius:6px">
       </div>
       <div style="display:grid;grid-template-columns:auto 1fr 1fr 70px;align-items:center;gap:6px;padding:8px 10px">
         <input type="checkbox" id="cb-queue" style="width:18px;height:18px;margin-right:8px">
         <label for="cb-queue" style="font-size:.85rem;font-weight:500">⬇ Queue de lot</label>
-        <select id="lieu-queue" style="font-size:.8rem;padding:4px 6px">${lieuOptions}</select>
+        <select id="lieu-queue" style="font-size:.8rem;padding:4px 6px">${lieuOptions(null,false)}</select>
         <input type="number" id="note-queue" min="0" max="20" step="0.5" placeholder="—" style="width:60px;padding:4px 6px;font-size:.8rem;border:1px solid var(--border);border-radius:6px">
       </div>
     </div>`;
@@ -2057,6 +2130,14 @@ window.openOp = (type)=>{
     html+=`<div class="field-inline"><label>Lieu de remise à l'eau</label><select id="op-lieu">
       ${lieuOptions(lot.lieuActuel,false)}
     </select></div>`;
+  }
+  if(type==='Dédobulage'){
+    html+=`
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">
+      <div class="field-inline"><label>Poches entrée</label><input type="number" id="dedo-entree" min="0" placeholder="ex: 500"></div>
+      <div class="field-inline"><label>Poches sortie</label><input type="number" id="dedo-sortie" min="0" placeholder="ex: 450"></div>
+      <div class="field-inline"><label>Poids/p (kg)</label><input type="number" id="dedo-poids" min="0" step="0.1" placeholder="ex: 2.5"></div>
+    </div>`;
   }
   html+=`<div class="field-inline"><label>Notes</label><textarea id="op-notes" rows="2" placeholder="Observations…"></textarea></div>`;
   if(type==='Criblage'||type==='Calibrage'||type==='Dédoublage'){
@@ -2135,12 +2216,21 @@ window.saveOp = async (type)=>{
     setTimeout(()=>openLot(currentLotId),300);
     return;
   }
+  if(type==='Dédobulage'){
+    const entree = document.getElementById('dedo-entree')?.value;
+    const sortie = document.getElementById('dedo-sortie')?.value;
+    const poids  = document.getElementById('dedo-poids')?.value;
+    const parts = [];
+    if(entree) parts.push('Entrée: '+entree+'p');
+    if(sortie) parts.push('Sortie: '+sortie+'p');
+    if(poids)  parts.push('Poids/p: '+poids+'kg');
+    if(parts.length) detail = 'Dédoublage ('+parts.join(' — ')+')';
+  }
   if(type==='Déplacement'){
     newLieu=document.getElementById('op-lieu').value;
     detail='Déplacement : '+lot.lieuActuel+' → '+newLieu;
     lieu=newLieu;
   }
-  if(type==='Remise à l\'eau'){
     newLieu=document.getElementById('op-lieu').value;
     lieu=newLieu;
     detail='Remise à l\'eau à '+newLieu;
@@ -2163,6 +2253,21 @@ window.saveOp = async (type)=>{
   closeModal('overlay-op');
   // Refresh lot detail
   setTimeout(()=>openLot(currentLotId),300);
+};
+
+window.editHistoEntry = async (lotId, key)=>{
+  const lot = lots[lotId];
+  if(!lot||!lot.historique||!lot.historique[key]) return;
+  const h = lot.historique[key];
+  const newDate = prompt('Date (AAAA-MM-JJ) :', h.date);
+  if(newDate===null) return;
+  const newDetail = prompt('Détail :', h.detail);
+  if(newDetail===null) return;
+  const updates = {};
+  updates[`lots/${lotId}/historique/${key}/date`] = newDate.trim()||h.date;
+  updates[`lots/${lotId}/historique/${key}/detail`] = newDetail.trim()||h.detail;
+  await update(ref(db,''), updates);
+  openLot(lotId);
 };
 
 window.deleteHistoEntry = async (lotId, key)=>{
@@ -2237,7 +2342,7 @@ const LIEUX_TREE = {
   'Locmariaquer':{color:'b-amber',  sous:['Echo','Leica','Collabo']},
   'Etel':        {color:'b-coral',  sous:[]},
   'St Helene':   {color:'b-purple', sous:[]},
-  'Blaver':      {color:'b-gray',   sous:[]},
+  'Blavet':      {color:'b-gray',   sous:[]},
   'Golf':        {color:'b-pink',   sous:[]},
 };
 
@@ -2463,9 +2568,13 @@ window.openLot = (id)=>{
     <ul class="timeline">${hist.length?hist.map(([k,h])=>`
       <li class="tl-item">
         <div class="tl-dot dot-${h.type}"></div><div class="tl-line"></div>
-        <div>
+        <div style="flex:1">
           <div class="tl-title">${h.detail}</div>
-          <div class="tl-meta">${h.date}${h.lieu?' · '+h.lieu:''}</div>
+          <div class="tl-meta" style="display:flex;align-items:center;gap:8px">
+            <span>${h.date}${h.lieu?' · '+h.lieu:''}</span>
+            <button onclick="editHistoEntry('${id}','${k}')" style="font-size:.7rem;padding:1px 6px;border-radius:4px;border:1px solid var(--border);background:none;cursor:pointer;color:var(--text2)">✏️</button>
+            <button onclick="deleteHistoEntry('${id}','${k}')" style="font-size:.7rem;padding:1px 6px;border-radius:4px;border:1px solid var(--border);background:none;cursor:pointer;color:var(--danger)">✕</button>
+          </div>
         </div>
       </li>`).join(''):'<div class="empty" style="padding:1rem">Aucune opération.</div>'}</ul>
     <div style="margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem;display:flex;gap:8px">
