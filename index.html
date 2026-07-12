@@ -2262,35 +2262,92 @@ window.editHistoEntry = (lotId, key)=>{
   const h = lot.historique[key];
   currentLotId = lotId;
 
-  // Ouvrir la modale d'opération avec données pré-remplies
-  document.getElementById('modal-op-title').textContent = 'Modifier — '+(h.detail||'').slice(0,40);
-  const html = `
-    <div class="field-inline"><label>Date</label>
-      <input type="date" id="edit-histo-date" value="${h.date||''}">
-    </div>
-    <div class="field-inline"><label>Détail complet</label>
-      <textarea id="edit-histo-detail" rows="4" style="font-size:.85rem">${h.detail||''}</textarea>
-    </div>
-    <div class="field-inline"><label>Lieu</label>
-      <input type="text" id="edit-histo-lieu" value="${h.lieu||''}" placeholder="ex: Locmariaquer > Echo">
-    </div>
-    <button class="btn-action primary btn-full" onclick="saveHistoEdit('${lotId}','${key}')">Enregistrer</button>
-  `;
-  document.getElementById('modal-op-body').innerHTML = html;
-  document.getElementById('overlay-op').classList.add('open');
+  // Mapper type normalisé -> label d'opération
+  const TYPE_MAP = {
+    'criblage':'Criblage','calibrage':'Calibrage',
+    'dedoublage':'Dédobulage','dedobulage':'Dédobulage',
+    'deplacement':'Déplacement','remisealeau':'Remise à l\'eau',
+    'autapis':'Au Tapis'
+  };
+  const opType = TYPE_MAP[h.type] || null;
+
+  if(!opType){
+    // Type inconnu — éditeur simple
+    document.getElementById('modal-op-title').textContent = 'Modifier entrée';
+    document.getElementById('modal-op-body').innerHTML = `
+      <div class="field-inline"><label>Date</label><input type="date" id="edit-histo-date" value="${h.date||''}"></div>
+      <div class="field-inline"><label>Détail</label><textarea id="edit-histo-detail" rows="3">${h.detail||''}</textarea></div>
+      <div class="field-inline"><label>Lieu</label><input type="text" id="edit-histo-lieu" value="${h.lieu||''}"></div>
+      <button class="btn-action primary btn-full" onclick="saveHistoEdit('${lotId}','${key}')">Enregistrer</button>`;
+    document.getElementById('overlay-op').classList.add('open');
+    return;
+  }
+
+  // Ouvrir le formulaire d'opération normal
+  openOp(opType);
+
+  // Pré-remplir après ouverture
+  requestAnimationFrame(()=>{
+    // Date
+    const dateEl = document.getElementById('op-date');
+    if(dateEl) dateEl.value = h.date||'';
+    // Notes
+    const notesEl = document.getElementById('op-notes');
+    if(notesEl && h.detail){
+      // Extraire les notes entre parenthèses si présentes
+      const m = h.detail.match(/\(([^)]+)\)$/);
+      if(m) notesEl.value = m[1];
+    }
+    // Lieu pour déplacement/remise
+    const lieuEl = document.getElementById('op-lieu');
+    if(lieuEl && h.lieu) lieuEl.value = h.lieu;
+
+    // Remplacer le bouton Enregistrer pour sauvegarder en mode édition
+    const btns = document.querySelectorAll('#modal-op-body .btn-action.primary');
+    btns.forEach(btn=>{
+      btn.onclick = ()=>saveHistoEdit(lotId, key, opType);
+    });
+  });
 };
 
-window.saveHistoEdit = async (lotId, key)=>{
-  const date   = document.getElementById('edit-histo-date').value;
-  const detail = document.getElementById('edit-histo-detail').value.trim();
-  const lieu   = document.getElementById('edit-histo-lieu').value.trim();
-  await update(ref(db, 'lots/'+lotId+'/historique/'+key), {
-    date: date || undefined,
-    detail: detail || undefined,
-    lieu: lieu || undefined
-  });
+window.saveHistoEdit = async (lotId, key, opType)=>{
+  // Sauvegarder via saveOp normal mais écraser l'entrée existante
+  const lot = lots[lotId];
+  if(!lot) return;
+  const h = lot.historique[key];
+  const date = document.getElementById('op-date')?.value || h.date;
+  const notes = document.getElementById('op-notes')?.value.trim()||'';
+  let detail = opType||h.detail;
+  let lieu = lot.lieuActuel;
+  let newLieu = null;
+
+  // Reconstruire le détail selon le type
+  if(opType==='Déplacement'){
+    const lieuEl=document.getElementById('op-lieu');
+    if(lieuEl){ newLieu=lieuEl.value; lieu=newLieu; detail='Déplacement : '+lot.lieuActuel+' → '+newLieu; }
+  } else if(opType==='Remise à l\'eau'){
+    const lieuEl=document.getElementById('op-lieu');
+    if(lieuEl){ newLieu=lieuEl.value; lieu=newLieu; detail='Remise à l\'eau à '+newLieu; }
+  } else if(opType==='Dédobulage'){
+    const e=document.getElementById('dedo-entree')?.value;
+    const s=document.getElementById('dedo-sortie')?.value;
+    const p=document.getElementById('dedo-poids')?.value;
+    const parts=[];
+    if(e)parts.push('Entrée: '+e+'p');
+    if(s)parts.push('Sortie: '+s+'p');
+    if(p)parts.push('Poids/p: '+p+'kg');
+    if(parts.length)detail='Dédoublage ('+parts.join(' — ')+')';
+  }
+  detail+=getVendableDetail()||'';
+  detail+=getCalibrageDetail()||'';
+  if(notes&&!detail.includes(notes))detail+=' ('+notes+')';
+  const note20El=document.getElementById('op-note20');
+  if(note20El?.value)detail+=' [Note: '+note20El.value+'/20]';
+
+  await update(ref(db,'lots/'+lotId+'/historique/'+key),{date,detail,lieu,ts:h.ts||Date.now()});
+  if(newLieu) await update(lotRef(lotId),{lieuActuel:newLieu});
   closeModal('overlay-op');
-  setTimeout(()=>openLot(lotId), 300);
+  setTimeout(()=>openLot(lotId),300);
 };
 
 window.deleteHistoEntry = async (lotId, key)=>{
