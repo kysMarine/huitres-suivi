@@ -2231,6 +2231,7 @@ window.saveOp = async (type)=>{
     detail='Déplacement : '+lot.lieuActuel+' → '+newLieu;
     lieu=newLieu;
   }
+  if(type==='Remise à l\'eau'){
     newLieu=document.getElementById('op-lieu').value;
     lieu=newLieu;
     detail='Remise à l\'eau à '+newLieu;
@@ -2263,10 +2264,10 @@ window.editHistoEntry = async (lotId, key)=>{
   if(newDate===null) return;
   const newDetail = prompt('Détail :', h.detail);
   if(newDetail===null) return;
-  const updates = {};
-  updates[`lots/${lotId}/historique/${key}/date`] = newDate.trim()||h.date;
-  updates[`lots/${lotId}/historique/${key}/detail`] = newDetail.trim()||h.detail;
-  await update(ref(db,''), updates);
+  await update(ref(db, 'lots/'+lotId+'/historique/'+key), {
+    date: newDate.trim()||h.date,
+    detail: newDetail.trim()||h.detail
+  });
   openLot(lotId);
 };
 
