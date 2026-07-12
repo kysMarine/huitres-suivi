@@ -354,9 +354,9 @@ td.blockcell:hover .resize-handle{display:block}
         <div class="form-row">
           <div class="field-inline"><label>Quantité</label>
               <div style="display:flex;gap:6px;align-items:center">
-                <input type="number" id="n-qte" placeholder="ex: 500" style="flex:1">
-                <select id="n-unite" style="padding:.4rem .6rem;border:1px solid var(--border);border-radius:8px;font-size:.85rem;background:var(--surface);color:var(--text)">
-                  <option value="Nombres">Nombres</option>
+                <input type="number" id="n-qte" placeholder="ex: 500" style="flex:3">
+                <select id="n-unite" style="flex:1;padding:.4rem .6rem;border:1px solid var(--border);border-radius:8px;font-size:.85rem;background:var(--surface);color:var(--text)">
+                  <option value="Nombres">Nbr</option>
                   <option value="Kg">Kg</option>
                 </select>
               </div>
@@ -2256,19 +2256,41 @@ window.saveOp = async (type)=>{
   setTimeout(()=>openLot(currentLotId),300);
 };
 
-window.editHistoEntry = async (lotId, key)=>{
+window.editHistoEntry = (lotId, key)=>{
   const lot = lots[lotId];
   if(!lot||!lot.historique||!lot.historique[key]) return;
   const h = lot.historique[key];
-  const newDate = prompt('Date (AAAA-MM-JJ) :', h.date);
-  if(newDate===null) return;
-  const newDetail = prompt('Détail :', h.detail);
-  if(newDetail===null) return;
+  currentLotId = lotId;
+
+  // Ouvrir la modale d'opération avec données pré-remplies
+  document.getElementById('modal-op-title').textContent = 'Modifier — '+(h.detail||'').slice(0,40);
+  const html = `
+    <div class="field-inline"><label>Date</label>
+      <input type="date" id="edit-histo-date" value="${h.date||''}">
+    </div>
+    <div class="field-inline"><label>Détail complet</label>
+      <textarea id="edit-histo-detail" rows="4" style="font-size:.85rem">${h.detail||''}</textarea>
+    </div>
+    <div class="field-inline"><label>Lieu</label>
+      <input type="text" id="edit-histo-lieu" value="${h.lieu||''}" placeholder="ex: Locmariaquer > Echo">
+    </div>
+    <button class="btn-action primary btn-full" onclick="saveHistoEdit('${lotId}','${key}')">Enregistrer</button>
+  `;
+  document.getElementById('modal-op-body').innerHTML = html;
+  document.getElementById('overlay-op').classList.add('open');
+};
+
+window.saveHistoEdit = async (lotId, key)=>{
+  const date   = document.getElementById('edit-histo-date').value;
+  const detail = document.getElementById('edit-histo-detail').value.trim();
+  const lieu   = document.getElementById('edit-histo-lieu').value.trim();
   await update(ref(db, 'lots/'+lotId+'/historique/'+key), {
-    date: newDate.trim()||h.date,
-    detail: newDetail.trim()||h.detail
+    date: date || undefined,
+    detail: detail || undefined,
+    lieu: lieu || undefined
   });
-  openLot(lotId);
+  closeModal('overlay-op');
+  setTimeout(()=>openLot(lotId), 300);
 };
 
 window.deleteHistoEntry = async (lotId, key)=>{
