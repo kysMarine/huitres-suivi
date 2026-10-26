@@ -119,6 +119,8 @@ td.cell.zone-sel{background:#bbf7d0;outline:1px solid #22c55e;outline-offset:-1p
 td.blockcell{font-size:8px;font-weight:600;overflow:visible;white-space:nowrap;text-overflow:ellipsis;cursor:pointer;padding:0;vertical-align:middle;position:relative}
 td.blockcell:hover{filter:brightness(.93)}
 td.blockcell.highlighted{outline:2px solid #e63946;outline-offset:-1px;z-index:2}
+tr.bydate-row:hover{background:var(--hover,#f0f9ff)}
+tr.bydate-active{background:#fee2e2!important;font-weight:600;color:#b91c1c}
 /* Lignes toujours 20px */
 table.grid tr{height:20px;max-height:20px}
 /* Poignées de redimensionnement */
@@ -1489,15 +1491,24 @@ function calcByDate(){
 
   if(!lots.length){ showRes('Aucun lot avec date trouvé.'); return; }
 
-  highlighted = lots.map(function(x){ return x.bi; });
-  render();
+  var allBi = lots.map(function(x){ return x.bi; });
+  highlighted = allBi.slice();
+  planRender ? planRender() : render();
+
+  function selectRow(bi, trEl){
+    highlighted = [bi];
+    planRender ? planRender() : render();
+    // Mettre en valeur la ligne cliquée
+    document.querySelectorAll('#res-panel tr.bydate-row').forEach(function(r){ r.classList.remove('bydate-active'); });
+    if(trEl) trEl.classList.add('bydate-active');
+  }
 
   var rows = lots.map(function(x){
     var b=x.b; var bi=x.bi;
     var p=parseInt(b.poches)||0;
     var kg=parseFloat(b.poids)||0;
     var tot=kg?+(p*kg).toFixed(1):0;
-    return '<tr onclick="highlighted=['+bi+'];render()" style="cursor:pointer">'
+    return '<tr class="bydate-row" onclick="(function(el){highlighted=['+bi+'];planRender?planRender():render();document.querySelectorAll(\'#res-panel tr.bydate-row\').forEach(function(r){r.classList.remove(\'bydate-active\')});el.classList.add(\'bydate-active\')})(this)" style="cursor:pointer">'
       +'<td>'+fmt(b.date)+'</td>'
       +'<td>'+esc(b.lot||'—')+'</td>'
       +'<td>'+esc(b.gram?gram(b.gram):'—')+'</td>'
@@ -1509,7 +1520,7 @@ function calcByDate(){
   showRes(
     '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
     +'<strong>'+lots.length+' lot'+(lots.length>1?'s':'')+' triés par date</strong>'
-    +'<button class="btn" onclick="highlighted='+JSON.stringify(highlighted)+';render()">Tout sélectionner</button>'
+    +'<button class="btn" onclick="highlighted='+JSON.stringify(allBi)+';planRender?planRender():render();document.querySelectorAll(\'#res-panel tr.bydate-row\').forEach(function(r){r.classList.remove(\'bydate-active\')})">Tout sélectionner</button>'
     +'</div>'
     +'<table style="width:100%">'
     +'<tr><th style="text-align:left">Date</th><th style="text-align:left">Lot</th><th style="text-align:left">Gram.</th><th style="text-align:right">Poches</th><th style="text-align:right">Total</th></tr>'
@@ -2174,14 +2185,10 @@ window.saveOp = async (type)=>{
       {id:'queue', label:'Queue de lot'}
     ].filter(f=>document.getElementById('cb-'+f.id)?.checked);
     if(!fractions.length){alert('Cochez au moins une fraction.');return;}
-    // Create a child lot for each checked fraction
     for(const f of fractions){
       const destLieu = document.getElementById('lieu-'+f.id).value;
       const noteEl = document.getElementById('note-'+f.id);
       const noteVal = noteEl && noteEl.value!=='' ? noteEl.value : null;
-      const initOrigine = lot.origine ? lot.origine.charAt(0).toUpperCase() : '?';
-      const initLieu = destLieu.charAt(0).toUpperCase();
-      const annee2 = String(lot.annee).slice(-2);
       const newNumero = lot.numero + '-' + f.label.charAt(0);
       let childNotes = 'Issu du criblage du lot ' + lot.numero + (notes?' - '+notes:'');
       if(noteVal!==null) childNotes += ' [Note qualité: '+noteVal+'/20]';
