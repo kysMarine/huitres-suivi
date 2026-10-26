@@ -116,8 +116,8 @@ td.cell{width:20px;min-width:20px;max-width:20px;height:20px;min-height:20px;max
 td.cell:hover{background:#eff6ff}
 td.cell.drag-sel{background:#bfdbfe}
 td.cell.zone-sel{background:#bbf7d0;outline:1px solid #22c55e;outline-offset:-1px}
-td.blockcell{font-size:8px;font-weight:600;overflow:visible;white-space:nowrap;text-overflow:ellipsis;cursor:pointer;padding:0;vertical-align:middle;position:relative}
-td.blockcell:hover{filter:brightness(.93)}
+td.blockcell{font-size:8px;font-weight:600;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer;padding:0;vertical-align:middle;position:relative}
+td.blockcell:hover{filter:brightness(.93);overflow:visible;z-index:10}
 td.blockcell.highlighted{outline:2px solid #e63946;outline-offset:-1px;z-index:2}
 tr.bydate-row:hover{background:var(--hover,#f0f9ff)}
 tr.bydate-active{background:#fee2e2!important;font-weight:600;color:#b91c1c}
@@ -506,22 +506,30 @@ td.blockcell:hover .resize-handle{display:block}
       <div class="field"><label>Texte libre</label><input type="text" id="fr-text" placeholder="ex: Zone réservée, Accès..."></div>
     </div>
 
-    <!-- COMMUN : Couleur + Style + Bordure -->
-    <div class="field"><label>Couleur</label><div class="swatches" id="bloc-swatches" style="display:flex;flex-wrap:wrap;gap:4px"></div></div>
-    <div class="field"><label>Style texte</label>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px">
-        <select id="b-fsize"><option value="8">Petit</option><option value="10" selected>Normal</option><option value="12">Grand</option></select>
-        <select id="b-fweight"><option value="400">Normal</option><option value="700" selected>Gras</option></select>
-        <select id="b-align"><option value="left">G</option><option value="center" selected>C</option><option value="right">D</option></select>
+    <!-- SECTION RÉTRACTABLE : Couleur + Style + Bordure -->
+    <details id="bloc-style-details" style="margin-top:6px">
+      <summary style="cursor:pointer;font-size:.8rem;font-weight:600;color:#64748b;padding:5px 0;list-style:none;display:flex;align-items:center;gap:5px;user-select:none">
+        <span id="bloc-style-arrow" style="font-size:.7rem;transition:transform .2s">▶</span>
+        <span>Apparence</span>
+      </summary>
+      <div style="padding-top:6px">
+        <div class="field"><label>Couleur</label><div class="swatches" id="bloc-swatches" style="display:flex;flex-wrap:wrap;gap:4px"></div></div>
+        <div class="field"><label>Style texte</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px">
+            <select id="b-fsize"><option value="8">Petit</option><option value="10" selected>Normal</option><option value="12">Grand</option></select>
+            <select id="b-fweight"><option value="400">Normal</option><option value="700" selected>Gras</option></select>
+            <select id="b-align"><option value="left">G</option><option value="center" selected>C</option><option value="right">D</option></select>
+          </div>
+        </div>
+        <div class="field"><label>Bordure</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:5px">
+            <select id="b-bwidth"><option value="1">Fine</option><option value="2" selected>Normale</option><option value="3">Épaisse</option></select>
+            <select id="b-bstyle"><option value="solid">Pleine</option><option value="double" selected>Double</option><option value="dashed">Pointillée</option></select>
+          </div>
+          <input type="color" id="b-bcolor" value="#1a202c" style="width:100%;height:32px;padding:2px;border:1px solid #e2e8f0;border-radius:7px">
+        </div>
       </div>
-    </div>
-    <div class="field"><label>Bordure</label>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:5px">
-        <select id="b-bwidth"><option value="1">Fine</option><option value="2" selected>Normale</option><option value="3">Épaisse</option></select>
-        <select id="b-bstyle"><option value="solid">Pleine</option><option value="double" selected>Double</option><option value="dashed">Pointillée</option></select>
-      </div>
-      <input type="color" id="b-bcolor" value="#1a202c" style="width:100%;height:32px;padding:2px;border:1px solid #e2e8f0;border-radius:7px">
-    </div>
+    </details>
     <div class="modal-btns">
       <button class="btn btn-primary" onclick="saveBloc()">Enregistrer</button>
       <button class="btn btn-danger" onclick="deleteBloc()" id="del-bloc" style="display:none">Supprimer</button>
@@ -1433,6 +1441,18 @@ function buildBlocSw(){
 function buildSw(id, fn){ buildBlocSw(); }
 
 function closeModal(id){ document.getElementById(id).classList.remove('open'); editing=null; }
+
+// Flèche animée pour le details Apparence
+(function(){
+  document.addEventListener('DOMContentLoaded', function(){
+    var det = document.getElementById('bloc-style-details');
+    if(!det) return;
+    det.addEventListener('toggle', function(){
+      var arrow = document.getElementById('bloc-style-arrow');
+      if(arrow) arrow.style.transform = det.open ? 'rotate(90deg)' : 'rotate(0deg)';
+    });
+  });
+})();
 
 // ── RECHERCHE / CALCULS ──
 function doSearch(){
