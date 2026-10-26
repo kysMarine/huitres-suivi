@@ -1463,7 +1463,7 @@ function doSearch(){
       var p=parseInt(b.poches)||0;
       var kg=parseFloat(b.poids)||0;
       var tot=kg ? +(p*kg).toFixed(1) : 0;
-      return '<tr onclick="highlighted=['+bi+'];render()" style="cursor:pointer">'
+      return '<tr class="hl-list-row" onclick="hlRow('+bi+',this)" style="cursor:pointer">'
         +'<td>'+esc(b.lot||'—')+'</td>'
         +'<td style="text-align:right">'+p+'p</td>'
         +'<td style="text-align:right">'+(kg?kg+'kg/p':'—')+'</td>'
@@ -1482,6 +1482,14 @@ function clearSearch(){
   render();
 }
 
+// Helper commun : rafraîchit le plan ET surligne la ligne cliquée dans n'importe quelle liste
+function doRender(){ if(typeof render==='function') render(); }
+function hlRow(bi, rowEl, rowClass){
+  highlighted=[bi]; doRender();
+  document.querySelectorAll('.hl-list-row').forEach(function(r){r.classList.remove('hl-row-active');});
+  if(rowEl) rowEl.classList.add('hl-row-active');
+}
+
 function calcByDate(){
   var blocks = (curTab().blocks||[]);
   var lots = blocks
@@ -1493,22 +1501,14 @@ function calcByDate(){
 
   var allBi = lots.map(function(x){ return x.bi; });
   highlighted = allBi.slice();
-  planRender ? planRender() : render();
-
-  function selectRow(bi, trEl){
-    highlighted = [bi];
-    planRender ? planRender() : render();
-    // Mettre en valeur la ligne cliquée
-    document.querySelectorAll('#res-panel tr.bydate-row').forEach(function(r){ r.classList.remove('bydate-active'); });
-    if(trEl) trEl.classList.add('bydate-active');
-  }
+  doRender();
 
   var rows = lots.map(function(x){
     var b=x.b; var bi=x.bi;
     var p=parseInt(b.poches)||0;
     var kg=parseFloat(b.poids)||0;
     var tot=kg?+(p*kg).toFixed(1):0;
-    return '<tr class="bydate-row" onclick="(function(el){highlighted=['+bi+'];planRender?planRender():render();document.querySelectorAll(\'#res-panel tr.bydate-row\').forEach(function(r){r.classList.remove(\'bydate-active\')});el.classList.add(\'bydate-active\')})(this)" style="cursor:pointer">'
+    return '<tr class="hl-list-row" onclick="hlRow('+bi+',this)" style="cursor:pointer">'
       +'<td>'+fmt(b.date)+'</td>'
       +'<td>'+esc(b.lot||'—')+'</td>'
       +'<td>'+esc(b.gram?gram(b.gram):'—')+'</td>'
@@ -1520,7 +1520,7 @@ function calcByDate(){
   showRes(
     '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
     +'<strong>'+lots.length+' lot'+(lots.length>1?'s':'')+' triés par date</strong>'
-    +'<button class="btn" onclick="highlighted='+JSON.stringify(allBi)+';planRender?planRender():render();document.querySelectorAll(\'#res-panel tr.bydate-row\').forEach(function(r){r.classList.remove(\'bydate-active\')})">Tout sélectionner</button>'
+    +'<button class="btn" onclick="highlighted='+JSON.stringify(allBi)+';doRender();document.querySelectorAll(\'.hl-list-row\').forEach(function(r){r.classList.remove(\'hl-row-active\')})">Tout sélectionner</button>'
     +'</div>'
     +'<table style="width:100%">'
     +'<tr><th style="text-align:left">Date</th><th style="text-align:left">Lot</th><th style="text-align:left">Gram.</th><th style="text-align:right">Poches</th><th style="text-align:right">Total</th></tr>'
@@ -1543,7 +1543,7 @@ function calcVides(){
   var rows=idx.map(function(bi){
     var b=curTab().blocks[bi];
     var p=parseInt(b.poches)||0;
-    return '<tr onclick="highlighted=['+bi+'];planRender ? planRender() : render()" style="cursor:pointer;hover:background:#f0f9ff">'
+    return '<tr class="hl-list-row" onclick="hlRow('+bi+',this)" style="cursor:pointer">'
       +'<td>L'+(b.row+1)+' col '+(b.col+1)+'</td>'
       +'<td style="text-align:right;font-weight:600">'+p+'p</td>'
       +'</tr>';
@@ -1551,10 +1551,8 @@ function calcVides(){
 
   showRes(
     '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
-    +'<strong onclick="highlighted='+JSON.stringify(idx)+';render()" style="cursor:pointer" title="Cliquer pour tout sélectionner">'
-    +idx.length+' vide'+(idx.length>1?'s':'')+' — <span style="color:#e24b4a">'+totPoches+' poches</span>'
-    +'</strong>'
-    +'<button class="btn" onclick="highlighted='+JSON.stringify(idx)+';render()">Tout sélectionner</button>'
+    +'<strong>'+idx.length+' vide'+(idx.length>1?'s':'')+' — <span style="color:#e24b4a">'+totPoches+' poches</span></strong>'
+    +'<button class="btn" onclick="highlighted='+JSON.stringify(idx)+';doRender();document.querySelectorAll(\'.hl-list-row\').forEach(function(r){r.classList.remove(\'hl-row-active\')})">Tout sélectionner</button>'
     +'</div>'
     +'<table><tr><th style="text-align:left">Position</th><th style="text-align:right">Poches</th></tr>'+rows+'</table>'
   );
@@ -1566,12 +1564,27 @@ function calcRef(ref){
   if(!idx.length){showRes('Aucune case '+esc(ref)+' trouvée.');return;}
   var totP=0,totKg=0;
   var rows=idx.map(function(bi){
-    var b=curTab().blocks[bi];var p=parseInt(b.poches)||0;var kg=parseFloat(b.poids)||0;var l=kg?+(p*kg).toFixed(1):0;
-    totP+=p;totKg+=l;
-    return '<tr onclick="highlighted=['+bi+'];render()"><td>'+esc(b.lot||'—')+'</td><td>'+p+'p</td><td>'+(kg?kg+'kg':'—')+'</td><td>'+(l?l+'kg':'—')+'</td></tr>';
+    var b=curTab().blocks[bi];
+    var p=parseInt(b.poches)||0;
+    var kg=parseFloat(b.poids)||0;
+    var l=kg?+(p*kg).toFixed(1):0;
+    totP+=p; totKg+=l;
+    return '<tr class="hl-list-row" onclick="hlRow('+bi+',this)" style="cursor:pointer">'
+      +'<td>'+esc(b.lot||'—')+'</td>'
+      +'<td style="text-align:right">'+p+'p</td>'
+      +'<td style="text-align:right">'+(kg?kg+'kg':'—')+'</td>'
+      +'<td style="text-align:right">'+(l?l+'kg':'—')+'</td>'
+      +'</tr>';
   }).join('');
-  highlighted=idx;render();
-  showRes('<div style="display:flex;align-items:center;justify-content:space-between"><strong>'+esc(ref)+' — '+totP+' poches — '+totKg.toFixed(1)+' kg</strong><button class="btn" onclick="highlighted='+JSON.stringify(idx)+';render()">Tout sélectionner</button></div><table><tr><th>Lot</th><th>Poches</th><th>Poids/p</th><th>Total</th></tr>'+rows+'</table>');
+  highlighted=idx; doRender();
+  showRes(
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+    +'<strong>'+esc(ref)+' — '+totP+' poches — '+totKg.toFixed(1)+' kg</strong>'
+    +'<button class="btn" onclick="highlighted='+JSON.stringify(idx)+';doRender();document.querySelectorAll(\'.hl-list-row\').forEach(function(r){r.classList.remove(\'hl-row-active\')})">Tout sélectionner</button>'
+    +'</div>'
+    +'<table style="width:100%"><tr><th style="text-align:left">Lot</th><th style="text-align:right">Poches</th><th style="text-align:right">Poids/p</th><th style="text-align:right">Total</th></tr>'
+    +rows+'</table>'
+  );
 }
 
 var resultsCollapsed = false;
