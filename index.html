@@ -216,6 +216,22 @@ td.blockcell:hover .resize-handle{display:block}
 #tab-plan .nav-zones{flex-shrink:0;padding-left:1.5rem}
 #tab-plan .results{flex-shrink:0;padding-left:1.5rem}
 #tab-plan .grid-wrap{flex:1;min-height:0}
+
+/* Plan-body : conteneur grille + résultats */
+.plan-body{display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden}
+/* Mode panneau latéral */
+#tab-plan.active.res-side .plan-body{flex-direction:row}
+#tab-plan.active.res-side .grid-wrap{flex:1;min-height:0;overflow:auto}
+#tab-plan.active.res-side .results{
+  display:flex!important;flex-direction:column;flex-shrink:0;overflow:hidden;
+  width:320px;max-height:none;border-bottom:none;border-left:1px solid #e2e8f0;
+  overflow:hidden;padding-left:0
+}
+#tab-plan.active.res-side .results-header{position:sticky;top:0}
+#tab-plan.active.res-side .results-body{flex:1;overflow-y:auto;padding:.5rem .75rem .75rem}
+/* Bouton mode liste */
+.results-toggle-mode{padding:.3rem .65rem;border-radius:6px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;font-size:.78rem;font-weight:600;line-height:1;transition:background .15s,color .15s;margin-left:auto;white-space:nowrap}
+.results-toggle-mode--active,.results-toggle-mode:hover{background:#0ea5e9;color:#fff;border-color:#0ea5e9}
 </style>
 </head>
 <body>
@@ -430,15 +446,7 @@ td.blockcell:hover .resize-handle{display:block}
   </div>
 </div>
 
-<div class="results" id="results">
-  <div class="results-header" onclick="toggleResults()">
-    <span id="results-summary" style="font-size:.82rem;font-weight:500"></span>
-    <span id="results-toggle" style="font-size:.75rem;color:#718096">▼ Réduire</span>
-  </div>
-  <div class="results-body" id="res-content"></div>
-</div>
-
-<!-- ONGLETS -->
+<!-- ONGLETS (hors plan-body) -->
 <div class="nav-parcs" id="navParcs"></div>
 <div class="nav-zones" id="navZones"></div>
 
@@ -451,9 +459,20 @@ td.blockcell:hover .resize-handle{display:block}
   <button class="ctx-item ctx-danger" id="ctx-delete" onclick="ctxAction('delete')"></button>
 </div>
 
-<div class="grid-wrap" id="gridWrap">
-  <div class="grid-inner" id="gridInner">
-    <table id="grid"></table>
+<!-- PLAN-BODY : grille + panneau résultats (côte à côte en mode side) -->
+<div class="plan-body" id="planBody">
+  <div class="grid-wrap" id="gridWrap">
+    <div class="grid-inner" id="gridInner">
+      <table id="grid"></table>
+    </div>
+  </div>
+
+  <div class="results" id="results">
+    <div class="results-header" onclick="toggleResults()">
+      <span id="results-summary" style="font-size:.82rem;font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+      <span id="results-toggle" style="font-size:.75rem;color:#718096;white-space:nowrap">▼ Réduire</span>
+    </div>
+    <div class="results-body" id="res-content"></div>
   </div>
 </div>
 
@@ -633,6 +652,7 @@ function curParc(){ return parcs[activeParc]; }
 function curTab(){ var p=curParc(); return p.zones[p.activeZone]; }
 
 var scale = 1;
+var resSide = false;
 var highlighted = [];
 var editing = null;
 var dragSel = new Set();
@@ -822,7 +842,8 @@ function renderNav(){
       (parc.zones.length>1?'<span class="tab-close" onclick="event.stopPropagation();delZone('+i+')" title="Supprimer">x</span>':'')+
     '</button>';
   }).join('')+
-  '<button class="zone-add" onclick="addZone()" title="Nouvelle zone">+</button>';
+  '<button class="zone-add" onclick="addZone()" title="Nouvelle zone">+</button>'+
+  '<button class="results-toggle-mode'+(resSide?' results-toggle-mode--active':'')+'" id="resModeBtn" onclick="toggleResMode()" title="Basculer affichage résultats">⇔ Côté</button>';
 }
 function renderTabs(){ renderNav(); }
 
@@ -1741,6 +1762,13 @@ function showRes(html){
   if(tog){ tog.textContent='▼ Réduire'; }
   if(body){ body.style.display='block'; }
 }
+function toggleResMode(){
+  resSide = !resSide;
+  var plan = document.getElementById('tab-plan');
+  if(plan) plan.classList.toggle('res-side', resSide);
+  renderNav(); // met à jour la classe active du bouton
+}
+
 function toggleResults(){
   resultsCollapsed = !resultsCollapsed;
   var tog = document.getElementById('results-toggle');
