@@ -128,9 +128,11 @@ td.blockcell:hover .trace-badge{display:block}
 /* Lignes toujours 20px */
 table.grid tr{height:20px;max-height:20px}
 /* Poignées de redimensionnement */
-.resize-handle{display:none;position:absolute;top:1px;width:9px;height:9px;background:#e63946;border-radius:50%;cursor:ew-resize;z-index:20;border:1.5px solid #fff}
-.resize-handle.left{left:-4px}
-.resize-handle.right{right:-4px}
+.resize-handle{display:none;position:absolute;width:9px;height:9px;background:#e63946;border-radius:50%;cursor:ew-resize;z-index:20;border:1.5px solid #fff}
+.resize-handle.left{top:50%;transform:translateY(-50%);left:-4px}
+.resize-handle.right{top:50%;transform:translateY(-50%);right:-4px}
+.resize-handle.top{left:50%;transform:translateX(-50%);top:-4px;cursor:ns-resize;background:#f59e0b}
+.resize-handle.bottom{left:50%;transform:translateX(-50%);bottom:-4px;cursor:grab;background:#3b82f6}
 td.blockcell:hover .resize-handle{display:block}
 
 /* MODAL */
@@ -1039,7 +1041,13 @@ function occ(){
   if(_occCache && _occCacheTab===t) return _occCache;
   var m={};
   var blocks=t.blocks||[];
-  blocks.forEach(function(b,bi){ bcells(b).forEach(function(p){ m[p[0]+'_'+p[1]]=bi; }); });
+  blocks.forEach(function(b,bi){
+    var isVert=b.dir==='up'||b.dir==='down';
+    var nbrows=(!isVert)?(b.nbrows||1):1;
+    bcells(b).forEach(function(p){
+      for(var rr=0;rr<nbrows;rr++) m[(p[0]+rr)+'_'+p[1]]=bi;
+    });
+  });
   _occCache=m; _occCacheTab=t;
   return m;
 }
@@ -1079,6 +1087,7 @@ function render(){
         var b=t.blocks[bi];
         var cells=bcells(b);
         var isVert=b.dir==='up'||b.dir==='down';
+        var nbrows=(!isVert)?(b.nbrows||1):1; // hauteur en lignes (1 ou 2) pour blocs horizontaux
         var isFirst=!cells.some(function(p){return map[p[0]+'_'+p[1]]===bi&&(p[0]<r||(p[0]===r&&p[1]<c2));});
         if(!isFirst){c2++;continue;}
         var isHL=highlighted.indexOf(bi)!==-1;
@@ -1087,16 +1096,19 @@ function render(){
         var bw=b.bwidth||'2'; var bs2=b.bstyle||'double'; var bc=b.bcolor||'#1a202c';
         var style='background:'+b.color+'55;border:'+bw+'px '+bs2+' '+bc+';color:'+darken(b.color)+';font-size:'+fs+'px;font-weight:'+fw+';text-align:'+ta+';overflow:hidden;white-space:nowrap;text-overflow:ellipsis';
         if(isVert) style+=';height:'+( cells.length*CELL)+'px;max-height:'+(cells.length*CELL)+'px;width:'+CELL+'px;max-width:'+CELL+'px';
+        if(!isVert && nbrows>1) style+=';height:'+(nbrows*CELL)+'px;max-height:'+(nbrows*CELL)+'px';
         if(isHL)style+=';outline:2px solid #e63946;outline-offset:-2px;z-index:2';
         var visibleCells=cells.filter(function(p){return p[0]===r;});
         var span=isVert?1:visibleCells.length;
-        // Ne pas forcer width/height — les cases CSS restent 20x20px strictes
         var inner = isVert
           ? '<div style="writing-mode:vertical-rl;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden">'+esc(label)+'</div>'
           : '<span style="overflow:hidden;text-overflow:ellipsis;display:block;padding:0 6px">'+esc(label)+'</span>'
             +'<div class="resize-handle left" onmousedown="startResize(event,'+bi+',\'left\')" onclick="event.stopPropagation()"></div>'
-            +'<div class="resize-handle right" onmousedown="startResize(event,'+bi+',\'right\')" onclick="event.stopPropagation()"></div>';
-        var spanAttr=isVert?'rowspan="'+cells.length+'"':'colspan="'+span+'"';
+            +'<div class="resize-handle right" onmousedown="startResize(event,'+bi+',\'right\')" onclick="event.stopPropagation()"></div>'
+            +'<div class="resize-handle top" onmousedown="startResizeV(event,'+bi+')" onclick="event.stopPropagation()" title="Étendre hauteur"></div>'
+            +'<div class="resize-handle bottom" onmousedown="startMove(event,'+bi+')" onclick="event.stopPropagation()" title="Déplacer le bloc"></div>';
+        var rowspanAttr=(!isVert&&nbrows>1)?(' rowspan="'+nbrows+'"'):'';
+        var spanAttr=isVert?'rowspan="'+cells.length+'"':'colspan="'+span+'"'+rowspanAttr;
         // Badge trace auteur
         var traceLines=[];
         if(b.createdBy) traceLines.push('✦ Créé par <b>'+esc(b.createdBy)+'</b>'+(b.createdAt?' le '+fmtTrace(b.createdAt):''));
@@ -1117,27 +1129,49 @@ function render(){
 function clickBlock(bi){ openEditBlock(bi); }
 
 // ── REDIMENSIONNEMENT PAR POIGNEE ──
-var resizing = null;
+var resizing = null;   // resize horizontal gauche/droite
+var resizingV = null;  // resize vertical haut (nbrows)
+var moving = null;     // déplacement libre (poignée bas)
 
 function startResize(e, bi, side){
-  e.preventDefault();
-  e.stopPropagation();
+  e.preventDefault(); e.stopPropagation();
   var b = curTab().blocks[bi];
   resizing = {bi:bi, side:side, origNbcases:b.nbcases||1, origCol:b.col, startX:e.clientX};
   document.body.style.cursor = 'ew-resize';
   document.body.style.userSelect = 'none';
 }
 
+function startResizeV(e, bi){
+  e.preventDefault(); e.stopPropagation();
+  var b = curTab().blocks[bi];
+  resizingV = {bi:bi, origNbrows:b.nbrows||1, startY:e.clientY};
+  document.body.style.cursor = 'ns-resize';
+  document.body.style.userSelect = 'none';
+}
+
+function startMove(e, bi){
+  e.preventDefault(); e.stopPropagation();
+  var b = curTab().blocks[bi];
+  moving = {bi:bi, origRow:b.row, origCol:b.col, startX:e.clientX, startY:e.clientY};
+  document.body.style.cursor = 'grabbing';
+  document.body.style.userSelect = 'none';
+}
+
+function getZoom(){
+  var g=document.getElementById('grid');
+  return g ? (parseFloat(g.style.zoom)||1) : 1;
+}
+
 document.addEventListener('mousemove', function(e){
-  // Tracker position souris (pour Ctrl+C/V)
   window._mouseX=e.clientX;
   window._mouseY=e.clientY;
-  // Resize bloc
+
+  // Resize horizontal gauche/droite
   if(resizing){
     var b = curTab().blocks[resizing.bi];
     if(!b) return;
-    var zoomVal = document.getElementById('grid') ? (parseFloat(document.getElementById('grid').style.zoom)||1) : 1;
-    var deltaCells = Math.round((e.clientX - resizing.startX) / (CELL * zoomVal));
+    var z=getZoom();
+    var deltaCells = Math.round((e.clientX - resizing.startX) / (CELL * z));
     if(resizing.side === 'right'){
       b.nbcases = Math.max(1, resizing.origNbcases + deltaCells);
     } else {
@@ -1145,15 +1179,41 @@ document.addEventListener('mousemove', function(e){
       var newCol = resizing.origCol + (resizing.origNbcases - newNb);
       if(newCol >= 0 && newCol < curTab().ncols){ b.nbcases = newNb; b.col = newCol; }
     }
-    render();
+    occInvalidate(); render(); return;
+  }
+
+  // Resize vertical haut (nbrows 1↔2)
+  if(resizingV){
+    var b = curTab().blocks[resizingV.bi];
+    if(!b) return;
+    var z=getZoom();
+    var deltaRows = Math.round((resizingV.startY - e.clientY) / (CELL * z)); // vers le haut = positif
+    var newRows = Math.min(2, Math.max(1, resizingV.origNbrows + deltaRows));
+    if(b.nbrows !== newRows){ b.nbrows = newRows; occInvalidate(); render(); }
+    return;
+  }
+
+  // Déplacement libre (poignée bas)
+  if(moving){
+    var b = curTab().blocks[moving.bi];
+    if(!b) return;
+    var z=getZoom();
+    var dc = Math.round((e.clientX - moving.startX) / (CELL * z));
+    var dr = Math.round((e.clientY - moving.startY) / (CELL * z));
+    var newRow = Math.max(0, Math.min(curTab().nrows-1, moving.origRow + dr));
+    var newCol = Math.max(0, Math.min(curTab().ncols-1, moving.origCol + dc));
+    if(b.row !== newRow || b.col !== newCol){ b.row = newRow; b.col = newCol; occInvalidate(); render(); }
+    return;
   }
 });
 
 document.addEventListener('mouseup', function(e){
-  if(!resizing) return;
+  var wasDoing = resizing || resizingV || moving;
+  if(!wasDoing) return;
   document.body.style.cursor = '';
   document.body.style.userSelect = '';
-  save(); resizing = null;
+  resizing = null; resizingV = null; moving = null;
+  if(wasDoing) save();
 });
 
 function initDrag(){
