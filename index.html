@@ -132,7 +132,7 @@ table.grid tr{height:20px;max-height:20px}
 .resize-handle.left{top:50%;transform:translateY(-50%);left:-4px}
 .resize-handle.right{top:50%;transform:translateY(-50%);right:-4px}
 .resize-handle.top{left:50%;transform:translateX(-50%);top:-4px;cursor:ns-resize;background:#f59e0b}
-.resize-handle.bottom{left:50%;transform:translateX(-50%);bottom:-4px;cursor:grab;background:#3b82f6}
+/* .resize-handle.bottom supprimé (poignée déplacer retirée) */
 td.blockcell:hover .resize-handle{display:block}
 
 /* MODAL */
@@ -217,21 +217,37 @@ td.blockcell:hover .resize-handle{display:block}
 #tab-plan .results{flex-shrink:0;padding-left:1.5rem}
 #tab-plan .grid-wrap{flex:1;min-height:0}
 
-/* Plan-body : conteneur grille + résultats */
-.plan-body{display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden}
-/* Mode panneau latéral */
-#tab-plan.active.res-side .plan-body{flex-direction:row}
-#tab-plan.active.res-side .grid-wrap{flex:1;min-height:0;overflow:auto}
-#tab-plan.active.res-side .results{
-  display:flex!important;flex-direction:column;flex-shrink:0;overflow:hidden;
-  width:320px;max-height:none;border-bottom:none;border-left:1px solid #e2e8f0;
-  overflow:hidden;padding-left:0
+/* Plan-body : toujours en mode côté (grille gauche, résultats droite) */
+.plan-body{display:flex;flex-direction:row;flex:1;min-height:0;overflow:hidden}
+.plan-body .grid-wrap{flex:1;min-height:0;overflow:auto}
+.plan-body .results{
+  display:flex!important;flex-direction:column;flex-shrink:0;
+  width:430px;max-height:none;border-bottom:none;border-left:1px solid #e2e8f0;
+  overflow:hidden;padding-left:0;
+  position:sticky;top:0;height:100%;align-self:flex-start
 }
-#tab-plan.active.res-side .results-header{position:sticky;top:0}
-#tab-plan.active.res-side .results-body{flex:1;overflow-y:auto;padding:.5rem .75rem .75rem}
-/* Bouton mode liste */
-.results-toggle-mode{padding:.3rem .65rem;border-radius:6px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;font-size:.78rem;font-weight:600;line-height:1;transition:background .15s,color .15s;margin-left:auto;white-space:nowrap}
-.results-toggle-mode--active,.results-toggle-mode:hover{background:#0ea5e9;color:#fff;border-color:#0ea5e9}
+.plan-body .results-header{position:sticky;top:0;background:#fff;z-index:2}
+.plan-body .results-body{flex:1;overflow-y:auto;padding:.5rem .75rem .75rem}
+/* Calculatrice flottante */
+#calc-float{position:fixed;bottom:20px;right:20px;z-index:9999;background:#1e293b;color:#f1f5f9;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.35);padding:0;width:240px;font-family:inherit;display:none;flex-direction:column;overflow:hidden}
+#calc-float.open{display:flex}
+#calc-float .calc-bar{display:flex;align-items:center;justify-content:space-between;padding:8px 12px 6px;cursor:move;background:#0f172a;border-radius:12px 12px 0 0;user-select:none}
+#calc-float .calc-bar span{font-size:.78rem;font-weight:700;letter-spacing:.05em;color:#94a3b8}
+#calc-float .calc-close{background:none;border:none;color:#94a3b8;cursor:pointer;font-size:1rem;padding:0 2px;line-height:1}
+#calc-float .calc-close:hover{color:#f87171}
+#calc-float .calc-screen{padding:8px 12px 4px;text-align:right}
+#calc-float .calc-expr{font-size:.72rem;color:#64748b;min-height:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#calc-float .calc-val{font-size:1.5rem;font-weight:700;color:#f1f5f9;min-height:36px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#calc-float .calc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#334155;border-top:1px solid #334155}
+#calc-float .calc-grid button{background:#1e293b;border:none;color:#f1f5f9;font-size:.95rem;padding:11px 0;cursor:pointer;transition:background .1s}
+#calc-float .calc-grid button:hover{background:#334155}
+#calc-float .calc-grid button.op{color:#38bdf8}
+#calc-float .calc-grid button.eq{background:#0ea5e9;color:#fff;font-weight:700}
+#calc-float .calc-grid button.eq:hover{background:#0284c7}
+#calc-float .calc-grid button.fn{color:#fb923c}
+#calc-float .calc-grid button.zero{grid-column:span 2}
+.btn-calc{padding:.3rem .65rem;border-radius:6px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;font-size:.78rem;font-weight:600;line-height:1;transition:background .15s,color .15s}
+.btn-calc:hover,.btn-calc.active{background:#0ea5e9;color:#fff;border-color:#0ea5e9}
 </style>
 </head>
 <body>
@@ -425,6 +441,7 @@ td.blockcell:hover .resize-handle{display:block}
         <button class="dropdown-item" onclick="calcByDate();closeDD()">📅 Trier par date</button>
       </div>
     </div>
+    <button class="btn-calc" id="calcBtn" onclick="toggleCalc()" title="Calculatrice">🧮 Calculatrice</button>
     <div class="sep"></div>
     <button class="btn" id="undoBtn" onclick="undo()" disabled>Annuler</button>
     <button class="btn" id="redoBtn" onclick="redo()" disabled>Rétablir</button>
@@ -842,8 +859,7 @@ function renderNav(){
       (parc.zones.length>1?'<span class="tab-close" onclick="event.stopPropagation();delZone('+i+')" title="Supprimer">x</span>':'')+
     '</button>';
   }).join('')+
-  '<button class="zone-add" onclick="addZone()" title="Nouvelle zone">+</button>'+
-  '<button class="results-toggle-mode'+(resSide?' results-toggle-mode--active':'')+'" id="resModeBtn" onclick="toggleResMode()" title="Basculer affichage résultats">⇔ Côté</button>';
+  '<button class="zone-add" onclick="addZone()" title="Nouvelle zone">+</button>';
 }
 function renderTabs(){ renderNav(); }
 
@@ -1126,8 +1142,7 @@ function render(){
           : '<span style="overflow:hidden;text-overflow:ellipsis;display:block;padding:0 6px">'+esc(label)+'</span>'
             +'<div class="resize-handle left" onmousedown="startResize(event,'+bi+',\'left\')" onclick="event.stopPropagation()"></div>'
             +'<div class="resize-handle right" onmousedown="startResize(event,'+bi+',\'right\')" onclick="event.stopPropagation()"></div>'
-            +'<div class="resize-handle top" onmousedown="startResizeV(event,'+bi+')" onclick="event.stopPropagation()" title="Étendre hauteur"></div>'
-            +'<div class="resize-handle bottom" onmousedown="startMove(event,'+bi+')" onclick="event.stopPropagation()" title="Déplacer le bloc"></div>';
+            +'<div class="resize-handle top" onmousedown="startResizeV(event,'+bi+')" onclick="event.stopPropagation()" title="Étendre hauteur"></div>';
         var rowspanAttr=(!isVert&&nbrows>1)?(' rowspan="'+nbrows+'"'):'';
         var spanAttr=isVert?'rowspan="'+cells.length+'"':'colspan="'+span+'"'+rowspanAttr;
         // Badge trace auteur
@@ -2912,6 +2927,112 @@ document.getElementById('login-password').addEventListener('keydown',e=>{if(e.ke
 
 
 
+</script>
+
+<!-- CALCULATRICE FLOTTANTE -->
+<div id="calc-float">
+  <div class="calc-bar" id="calcBar">
+    <span>🧮 Calculatrice</span>
+    <button class="calc-close" onclick="toggleCalc()" title="Fermer">✕</button>
+  </div>
+  <div class="calc-screen">
+    <div class="calc-expr" id="calcExpr"></div>
+    <div class="calc-val" id="calcVal">0</div>
+  </div>
+  <div class="calc-grid">
+    <button class="fn" onclick="calcAC()">AC</button>
+    <button class="fn" onclick="calcToggleSign()">+/−</button>
+    <button class="fn" onclick="calcPct()">%</button>
+    <button class="op" onclick="calcOp('/')">÷</button>
+    <button onclick="calcNum('7')">7</button>
+    <button onclick="calcNum('8')">8</button>
+    <button onclick="calcNum('9')">9</button>
+    <button class="op" onclick="calcOp('*')">×</button>
+    <button onclick="calcNum('4')">4</button>
+    <button onclick="calcNum('5')">5</button>
+    <button onclick="calcNum('6')">6</button>
+    <button class="op" onclick="calcOp('-')">−</button>
+    <button onclick="calcNum('1')">1</button>
+    <button onclick="calcNum('2')">2</button>
+    <button onclick="calcNum('3')">3</button>
+    <button class="op" onclick="calcOp('+')">+</button>
+    <button class="zero" onclick="calcNum('0')">0</button>
+    <button onclick="calcDot()">.</button>
+    <button class="eq" onclick="calcEq()">=</button>
+  </div>
+</div>
+
+<script>
+// ── CALCULATRICE FLOTTANTE ──
+var _calcCur='0', _calcPrev='', _calcOp=null, _calcReset=false;
+
+function toggleCalc(){
+  var el=document.getElementById('calc-float');
+  var btn=document.getElementById('calcBtn');
+  var open=el.classList.toggle('open');
+  if(btn) btn.classList.toggle('active',open);
+}
+
+function _calcDisplay(){
+  document.getElementById('calcVal').textContent = _calcCur;
+}
+function calcNum(n){
+  if(_calcReset){ _calcCur='0'; _calcReset=false; }
+  if(_calcCur==='0'&&n!=='.') _calcCur=n;
+  else _calcCur+=n;
+  _calcDisplay();
+}
+function calcDot(){
+  if(_calcReset){ _calcCur='0'; _calcReset=false; }
+  if(_calcCur.indexOf('.')===-1) _calcCur+='.';
+  _calcDisplay();
+}
+function calcOp(op){
+  if(_calcOp && !_calcReset) calcEq();
+  _calcPrev=_calcCur; _calcOp=op; _calcReset=true;
+  var sym={'/':"÷",'*':"×",'-':"−",'+':"+"}[op]||op;
+  document.getElementById('calcExpr').textContent=_calcPrev+' '+sym;
+}
+function calcEq(){
+  if(!_calcOp) return;
+  var a=parseFloat(_calcPrev), b=parseFloat(_calcCur), r=0;
+  if(_calcOp==='+') r=a+b;
+  else if(_calcOp==='-') r=a-b;
+  else if(_calcOp==='*') r=a*b;
+  else if(_calcOp==='/') r=b!==0?a/b:0;
+  var sym={'/':"÷",'*':"×",'-':"−",'+':"+"}[_calcOp]||_calcOp;
+  document.getElementById('calcExpr').textContent=_calcPrev+' '+sym+' '+_calcCur+' =';
+  _calcCur=String(parseFloat(r.toFixed(10)));
+  _calcOp=null; _calcReset=true;
+  _calcDisplay();
+}
+function calcAC(){ _calcCur='0'; _calcPrev=''; _calcOp=null; _calcReset=false; document.getElementById('calcExpr').textContent=''; _calcDisplay(); }
+function calcToggleSign(){ _calcCur=String(-parseFloat(_calcCur)); _calcDisplay(); }
+function calcPct(){ _calcCur=String(parseFloat(_calcCur)/100); _calcDisplay(); }
+
+// Drag calculatrice
+(function(){
+  var el,bar,ox,oy,bx,by;
+  document.addEventListener('DOMContentLoaded',function(){
+    el=document.getElementById('calc-float');
+    bar=document.getElementById('calcBar');
+    bar.addEventListener('mousedown',function(e){
+      if(e.target.classList.contains('calc-close'))return;
+      var r=el.getBoundingClientRect();
+      ox=e.clientX-r.left; oy=e.clientY-r.top;
+      bx=r.right; by=r.bottom;
+      document.addEventListener('mousemove',onMove);
+      document.addEventListener('mouseup',onUp,{once:true});
+    });
+  });
+  function onMove(e){
+    var x=e.clientX-ox, y=e.clientY-oy;
+    x=Math.max(0,Math.min(x,window.innerWidth-(bx-ox+(bx-ox))));
+    y=Math.max(0,Math.min(y,window.innerHeight-200));
+    el.style.left=x+'px'; el.style.bottom='auto'; el.style.right='auto'; el.style.top=y+'px';
+  }
+  function onUp(){ document.removeEventListener('mousemove',onMove); }
+})();
 </script>
 
 </body>
